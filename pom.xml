@@ -20,6 +20,7 @@
         <module>2-0-jdbc-api</module>
         <module>3-0-jpa-and-hibernate</module>
         <module>4-0-spring-data-jpa</module>
+        <module>java-persistence-util</module>
     </modules>
 
     <dependencies>
@@ -72,7 +73,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>1.7.21</version>
+            <version>1.7.30</version>
         </dependency>
     </dependencies>
 
