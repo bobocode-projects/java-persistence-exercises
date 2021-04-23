@@ -1,8 +1,7 @@
 package com.bobocode.dao;
 
 import com.bobocode.model.Product;
-import com.bobocode.util.*;
-
+import com.bobocode.util.ExerciseNotCompletedException;
 
 import javax.sql.DataSource;
 import java.util.List;
