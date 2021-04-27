@@ -6,7 +6,7 @@ of that class using **JDBC API**.
 To verify your implementation, run `ProductDaoTest.java`
 
 
- 
+     
 ### Pre-conditions :heavy_exclamation_mark:
 You're supposed to be familiar with JDBC API, SQL and be able to write Java code
 

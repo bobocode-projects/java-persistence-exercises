@@ -1,5 +1,6 @@
 package com.bobocode.dao;
 
+import com.bobocode.exception.DaoOperationException;
 import com.bobocode.model.Product;
 
 import java.util.List;
@@ -13,11 +14,12 @@ public interface ProductDao {
      * Stores a new product into the database. Sets generated id to the {@link Product} instance
      *
      * @param product new product
+     * @throws DaoOperationException with massage: "Error saving product: {@link Product} instance"
      */
     void save(Product product);
 
     /**
-     * Retrieves and returns all producrs from the database
+     * Retrieves and returns all products from the database
      *
      * @return list of all products
      */
