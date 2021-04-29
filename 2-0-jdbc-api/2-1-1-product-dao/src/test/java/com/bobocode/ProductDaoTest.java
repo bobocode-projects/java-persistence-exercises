@@ -32,13 +32,222 @@ public class ProductDaoTest {
     private static DataSource dataSource;
 
     @BeforeAll
-    static void init() throws SQLException {
+    static void init() {
         dataSource = Mockito.spy(JdbcUtil.createDefaultInMemoryH2DataSource());
         createAccountTable(dataSource);
         productDao = new ProductDaoImpl(dataSource);
     }
 
-    private static void createAccountTable(DataSource dataSource) throws SQLException {
+    @Test
+    @Order(1)
+    @DisplayName("Save a product")
+    void save() {
+        Product fanta = createTestFantaProduct();
+        int productsCountBeforeInsert = findAllFromDataBase().size();
+
+        productDao.save(fanta);
+        List<Product> products = findAllFromDataBase();
+
+        assertNotNull(fanta.getId());
+        assertThat(productsCountBeforeInsert + 1).isEqualTo(products.size());
+        assertTrue(products.contains(fanta));
+    }
+
+    @Test
+    @Order(2)
+    @DisplayName("save() throws an exception when product ID is invalid")
+    void saveInvalidProduct() {
+        Product invalidTestProduct = createInvalidTestProduct();
+
+        assertThatExceptionOfType(DaoOperationException.class).isThrownBy(() -> productDao.save(invalidTestProduct))
+                .withMessage(String.format("Error saving product: %s", invalidTestProduct));
+    }
+
+
+    @Test
+    @Order(3)
+    @DisplayName("Find all the products")
+    void findAll() {
+        List<Product> newProducts = createTestProductList();
+
+        List<Product> oldProducts = productDao.findAll();
+        newProducts.forEach(this::saveIntoDataBase);
+        List<Product> products = productDao.findAll();
+
+        assertTrue(products.containsAll(newProducts));
+        assertTrue(products.containsAll(oldProducts));
+        assertThat(oldProducts.size() + newProducts.size()).isEqualTo(products.size());
+    }
+
+
+    @Test
+    @Order(5)
+    @DisplayName("Find a product by ID")
+    void findById() {
+        Product testProduct = generateTestProduct();
+        saveIntoDataBase(testProduct);
+
+        Product product = productDao.findOne(testProduct.getId());
+
+        assertThat(testProduct).isEqualTo(product);
+        assertThat(testProduct.getName()).isEqualTo(product.getName());
+        assertThat(testProduct.getProducer()).isEqualTo(product.getProducer());
+        assertThat(testProduct.getPrice().setScale(2)).isEqualTo(product.getPrice().setScale(2));
+        assertThat(testProduct.getExpirationDate()).isEqualTo(product.getExpirationDate());
+    }
+
+    @Test
+    @Order(6)
+    @DisplayName("findOne() throws an exception when a product ID is invalid")
+    void findByNotExistingId() {
+        long invalidId = -1L;
+
+        assertThatExceptionOfType(DaoOperationException.class).isThrownBy(() -> productDao.findOne(invalidId))
+                .withMessage(String.format("Product with id = %d does not exist", invalidId));
+    }
+
+    @Test
+    @Order(7)
+    @DisplayName("Update a product")
+    void update() {
+        Product testProduct = generateTestProduct();
+        saveIntoDataBase(testProduct);
+        List<Product> productsBeforeUpdate = findAllFromDataBase();
+        testProduct.setName("Updated name");
+        testProduct.setProducer("Updated producer");
+        testProduct.setPrice(BigDecimal.valueOf(666));
+        testProduct.setExpirationDate(LocalDate.of(2020, Month.JANUARY, 1));
+
+        productDao.update(testProduct);
+        List<Product> products = findAllFromDataBase();
+        Product updatedProduct = findOneFromDatabase(testProduct.getId());
+
+        assertThat(productsBeforeUpdate.size()).isEqualTo(products.size());
+        RecursiveComparisonConfiguration recursiveComparisonConfiguration = new RecursiveComparisonConfiguration();
+        recursiveComparisonConfiguration.setIgnoreAllActualNullFields(true);
+        assertThat(testProduct).usingRecursiveComparison(recursiveComparisonConfiguration).isEqualTo(updatedProduct);
+        productsBeforeUpdate.remove(testProduct);
+        products.remove(testProduct);
+        assertThat(productsBeforeUpdate).usingRecursiveComparison().isEqualTo(products);
+    }
+
+    @Test
+    @Order(8)
+    @DisplayName("update() throws an exception when a product ID is null")
+    void updateNotStored() {
+        Product notStoredProduct = generateTestProduct();
+
+        try {
+            productDao.update(notStoredProduct);
+            fail("Exception wasn't thrown");
+        } catch (Exception e) {
+            assertThat(DaoOperationException.class).isEqualTo(e.getClass());
+            assertThat("Cannot find a product without ID").isEqualTo(e.getMessage());
+        }
+    }
+
+    @Test
+    @Order(9)
+    @DisplayName("update() throws an exception when a product ID is invalid")
+    void updateProductWithInvalidId() {
+        Product testProduct = generateTestProduct();
+        long invalidId = -1L;
+        testProduct.setId(invalidId);
+
+        assertThatExceptionOfType(DaoOperationException.class).isThrownBy(() -> productDao.update(testProduct))
+                .withMessage(String.format("Product with id = %d does not exist", invalidId));
+    }
+
+
+    @Test
+    @Order(10)
+    @DisplayName("Remove a product")
+    void remove() {
+        Product testProduct = generateTestProduct();
+        saveIntoDataBase(testProduct);
+        List<Product> productsBeforeRemove = findAllFromDataBase();
+
+        productDao.remove(testProduct);
+        List<Product> products = findAllFromDataBase();
+
+        assertThat(productsBeforeRemove.size() - 1).isEqualTo(products.size());
+        assertFalse(products.contains(testProduct));
+    }
+
+    @Test
+    @Order(11)
+    @DisplayName("remove() throws an exception when a product ID is null")
+    void removeNotStored() {
+        Product notStoredProduct = generateTestProduct();
+
+        assertThatExceptionOfType(DaoOperationException.class).isThrownBy(() -> productDao.remove(notStoredProduct))
+                .withMessage("Cannot find a product without ID");
+    }
+
+    @Test
+    @Order(12)
+    @DisplayName("remove() throws an exception when a product ID is invalid")
+    void removeProductWithInvalidId() {
+        Product testProduct = generateTestProduct();
+        long invalidId = -1L;
+        testProduct.setId(invalidId);
+
+        assertThatExceptionOfType(DaoOperationException.class).isThrownBy(() -> productDao.remove(testProduct))
+                .withMessage(String.format("Product with id = %d does not exist", invalidId));
+    }
+
+    @Test
+    @Order(13)
+    @DisplayName("save() handles SQLException using DaoOperationException")
+    @SneakyThrows
+    void saveErrorCase() {
+        givenDatabaseError();
+        assertThatExceptionOfType(DaoOperationException.class).isThrownBy(() -> productDao.save(new Product()));
+    }
+
+    @Test
+    @SneakyThrows
+    @Order(14)
+    @DisplayName("findAll() handles SQLException using DaoOperationException")
+    void findAllErrorCase() {
+        givenDatabaseError();
+        assertThatExceptionOfType(DaoOperationException.class).isThrownBy(() -> productDao.findAll());
+    }
+
+    @Test
+    @Order(15)
+    @DisplayName("findOne() handles SQLException using DaoOperationException")
+    @SneakyThrows
+    void findOneErrorCase() {
+        givenDatabaseError();
+        assertThatExceptionOfType(DaoOperationException.class).isThrownBy(() -> productDao.findOne(1L));
+    }
+
+    @Test
+    @Order(16)
+    @DisplayName("update() handles SQLException using DaoOperationException")
+    @SneakyThrows
+    void updateErrorCase() {
+        givenDatabaseError();
+        assertThatExceptionOfType(DaoOperationException.class).isThrownBy(() -> productDao.update(new Product()));
+    }
+
+    @Test
+    @Order(17)
+    @DisplayName("remove() handles SQLException using DaoOperationException")
+    @SneakyThrows
+    void removeErrorCase() {
+        givenDatabaseError();
+        assertThatExceptionOfType(DaoOperationException.class).isThrownBy(() -> productDao.remove(new Product()));
+    }
+
+
+    private void givenDatabaseError() throws SQLException {
+        doThrow(new SQLException("Mock testing Exception")).when(dataSource).getConnection();
+    }
+
+    @SneakyThrows
+    private static void createAccountTable(DataSource dataSource) {
         try (Connection connection = dataSource.getConnection()) {
             Statement createTableStatement = connection.createStatement();
             createTableStatement.execute("CREATE TABLE IF NOT EXISTS products (\n" +
@@ -63,21 +272,6 @@ public class ProductDaoTest {
                 .expirationDate(LocalDate.ofYearDay(LocalDate.now().getYear() + RandomUtils.nextInt(1, 5),
                         RandomUtils.nextInt(1, 365)))
                 .build();
-    }
-
-    @Test
-    @Order(1)
-    @DisplayName("Save a product")
-    void save() {
-
-        Product fanta = createTestFantaProduct();
-        int productsCountBeforeInsert = findAllFromDataBase().size();
-        productDao.save(fanta);
-        List<Product> products = findAllFromDataBase();
-
-        assertNotNull(fanta.getId());
-        assertThat(productsCountBeforeInsert + 1).isEqualTo(products.size());
-        assertTrue(products.contains(fanta));
     }
 
     private List<Product> findAllFromDataBase() {
@@ -122,21 +316,6 @@ public class ProductDaoTest {
         return product;
     }
 
-    @Test
-    @Order(2)
-    @DisplayName("save() throws an exception when product ID is invalid")
-    void saveInvalidProduct() {
-        Product invalidTestProduct = createInvalidTestProduct();
-
-        try {
-            productDao.save(invalidTestProduct);
-            fail("Exception wasn't thrown");
-        } catch (Exception e) {
-            assertThat(DaoOperationException.class).isEqualTo(e.getClass());
-            assertThat(String.format("Error saving product: %s", invalidTestProduct)).isEqualTo(e.getMessage());
-        }
-    }
-
     private Product createTestFantaProduct() {
         return Product.builder()
                 .name("Fanta")
@@ -150,21 +329,6 @@ public class ProductDaoTest {
                 .name("INVALID")
                 .price(BigDecimal.valueOf(22))
                 .expirationDate(LocalDate.of(2020, Month.APRIL, 14)).build();
-    }
-
-
-    @Test
-    @Order(3)
-    @DisplayName("Find all the products")
-    void findAll() {
-        List<Product> newProducts = createTestProductList();
-        List<Product> oldProducts = productDao.findAll();
-        newProducts.forEach(this::saveIntoDataBase);
-        List<Product> products = productDao.findAll();
-
-        assertTrue(products.containsAll(newProducts));
-        assertTrue(products.containsAll(oldProducts));
-        assertThat(oldProducts.size() + newProducts.size()).isEqualTo(products.size());
     }
 
     private void saveIntoDataBase(Product product) {
@@ -231,65 +395,6 @@ public class ProductDaoTest {
         );
     }
 
-
-    @Test
-    @Order(5)
-    @DisplayName("Find a product by ID")
-    void findById() {
-        Product testProduct = generateTestProduct();
-
-        saveIntoDataBase(testProduct);
-
-        Product product = productDao.findOne(testProduct.getId());
-
-        assertThat(testProduct).isEqualTo(product);
-        assertThat(testProduct.getName()).isEqualTo(product.getName());
-        assertThat(testProduct.getProducer()).isEqualTo(product.getProducer());
-        assertThat(testProduct.getPrice().setScale(2)).isEqualTo(product.getPrice().setScale(2));
-        assertThat(testProduct.getExpirationDate()).isEqualTo(product.getExpirationDate());
-    }
-
-    @Test
-    @Order(6)
-    @DisplayName("findOne() throws an exception when a product ID is invalid")
-    void findByNotExistingId() {
-        long invalidId = -1L;
-        try {
-            productDao.findOne(invalidId);
-            fail("Exception wasn't thrown");
-        } catch (Exception e) {
-            assertThat(DaoOperationException.class).isEqualTo(e.getClass());
-            assertThat(String.format("Product with id = %d does not exist", invalidId)).isEqualTo(e.getMessage());
-        }
-    }
-
-    @Test
-    @Order(7)
-    @DisplayName("Update a product")
-    void update() {
-        Product testProduct = generateTestProduct();
-
-        saveIntoDataBase(testProduct);
-        List<Product> productsBeforeUpdate = findAllFromDataBase();
-
-        testProduct.setName("Updated name");
-        testProduct.setProducer("Updated producer");
-        testProduct.setPrice(BigDecimal.valueOf(666));
-        testProduct.setExpirationDate(LocalDate.of(2020, Month.JANUARY, 1));
-        productDao.update(testProduct);
-
-        List<Product> products = findAllFromDataBase();
-        Product updatedProduct = findOneFromDatabase(testProduct.getId());
-
-        assertThat(productsBeforeUpdate.size()).isEqualTo(products.size());
-        RecursiveComparisonConfiguration recursiveComparisonConfiguration = new RecursiveComparisonConfiguration();
-        recursiveComparisonConfiguration.setIgnoreAllActualNullFields(true);
-        assertThat(testProduct).usingRecursiveComparison(recursiveComparisonConfiguration).isEqualTo(updatedProduct);
-        productsBeforeUpdate.remove(testProduct);
-        products.remove(testProduct);
-        assertThat(productsBeforeUpdate).usingRecursiveComparison().isEqualTo(products);
-    }
-
     private Product findOneFromDatabase(Long id) {
         Objects.requireNonNull(id);
         try (Connection connection = dataSource.getConnection()) {
@@ -318,136 +423,5 @@ public class ProductDaoTest {
         } catch (SQLException e) {
             throw new DaoOperationException(String.format("Cannot prepare select by id statement for id = %d", id), e);
         }
-    }
-
-    @Test
-    @Order(8)
-    @DisplayName("update() throws an exception when a product ID is null")
-    void updateNotStored() {
-        Product notStoredProduct = generateTestProduct();
-
-        try {
-            productDao.update(notStoredProduct);
-            fail("Exception wasn't thrown");
-        } catch (Exception e) {
-            assertThat(DaoOperationException.class).isEqualTo(e.getClass());
-            assertThat("Cannot find a product without ID").isEqualTo(e.getMessage());
-        }
-    }
-
-    @Test
-    @Order(9)
-    @DisplayName("update() throws an exception when a product ID is invalid")
-    void updateProductWithInvalidId() {
-        Product testProduct = generateTestProduct();
-        long invalidId = -1L;
-        testProduct.setId(invalidId);
-
-        try {
-            productDao.update(testProduct);
-            fail("Exception wasn't thrown");
-        } catch (Exception e) {
-            assertThat(DaoOperationException.class).isEqualTo(e.getClass());
-            assertThat(String.format("Product with id = %d does not exist", invalidId)).isEqualTo(e.getMessage());
-        }
-    }
-
-
-    @Test
-    @Order(10)
-    @DisplayName("Remove a product")
-    void remove() {
-        Product testProduct = generateTestProduct();
-
-        saveIntoDataBase(testProduct);
-        List<Product> productsBeforeRemove = findAllFromDataBase();
-
-        productDao.remove(testProduct);
-        List<Product> products = findAllFromDataBase();
-
-        assertThat(productsBeforeRemove.size() - 1).isEqualTo(products.size());
-        assertFalse(products.contains(testProduct));
-    }
-
-    @Test
-    @Order(11)
-    @DisplayName("remove() throws an exception when a product ID is null")
-    void removeNotStored() {
-        Product notStoredProduct = generateTestProduct();
-
-        try {
-            productDao.remove(notStoredProduct);
-            fail("Exception wasn't thrown");
-        } catch (Exception e) {
-            assertThat(DaoOperationException.class).isEqualTo(e.getClass());
-            assertThat("Cannot find a product without ID").isEqualTo(e.getMessage());
-        }
-    }
-
-    @Test
-    @Order(12)
-    @DisplayName("remove() throws an exception when a product ID is invalid")
-    void removeProductWithInvalidId() {
-        Product testProduct = generateTestProduct();
-        long invalidId = -1L;
-        testProduct.setId(invalidId);
-
-        try {
-            productDao.remove(testProduct);
-            fail("Exception wasn't thrown");
-        } catch (Exception e) {
-            assertThat(DaoOperationException.class).isEqualTo(e.getClass());
-            assertThat(String.format("Product with id = %d does not exist", invalidId)).isEqualTo(e.getMessage());
-        }
-    }
-
-    @Test
-    @Order(13)
-    @DisplayName("save() handles SQLException using DaoOperationException")
-    @SneakyThrows
-    void saveErrorCase() {
-        givenDatabaseError();
-        assertThatExceptionOfType(DaoOperationException.class).isThrownBy(() -> productDao.save(new Product()));
-    }
-
-    @Test
-    @SneakyThrows
-    @Order(14)
-    @DisplayName("findAll() handles SQLException using DaoOperationException")
-    void findAllErrorCase() {
-        givenDatabaseError();
-        assertThatExceptionOfType(DaoOperationException.class).isThrownBy(() -> productDao.findAll());
-    }
-
-    @Test
-    @Order(15)
-    @DisplayName("findOne() handles SQLException using DaoOperationException")
-    @SneakyThrows
-    void findOneErrorCase() {
-        givenDatabaseError();
-        assertThatExceptionOfType(DaoOperationException.class).isThrownBy(() -> productDao.findOne(1L));
-    }
-
-    @Test
-    @Order(16)
-    @DisplayName("update() handles SQLException using DaoOperationException")
-    @SneakyThrows
-    void updateErrorCase() {
-        givenDatabaseError();
-        assertThatExceptionOfType(DaoOperationException.class).isThrownBy(() -> productDao.update(new Product()));
-    }
-
-    @Test
-    @Order(17)
-    @DisplayName("remove() handles SQLException using DaoOperationException")
-    @SneakyThrows
-    void removeErrorCase() {
-        givenDatabaseError();
-        assertThatExceptionOfType(DaoOperationException.class).isThrownBy(() -> productDao.remove(new Product()));
-    }
-
-
-    private void givenDatabaseError() throws SQLException {
-        doThrow(new SQLException("Mock testing Exception")).when(dataSource).getConnection();
     }
 }
