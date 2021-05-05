@@ -137,13 +137,8 @@ public class ProductDaoTest {
     void updateNotStored() {
         Product notStoredProduct = generateTestProduct();
 
-        try {
-            productDao.update(notStoredProduct);
-            fail("Exception wasn't thrown");
-        } catch (Exception e) {
-            assertThat(DaoOperationException.class).isEqualTo(e.getClass());
-            assertThat("Cannot find a product without ID").isEqualTo(e.getMessage());
-        }
+        assertThatExceptionOfType(DaoOperationException.class).isThrownBy(() -> productDao.update(notStoredProduct))
+                .withMessage("Product id cannot be null");
     }
 
     @Test
@@ -181,7 +176,7 @@ public class ProductDaoTest {
         Product notStoredProduct = generateTestProduct();
 
         assertThatExceptionOfType(DaoOperationException.class).isThrownBy(() -> productDao.remove(notStoredProduct))
-                .withMessage("Cannot find a product without ID");
+                .withMessage("Product id cannot be null");
     }
 
     @Test
