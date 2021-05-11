@@ -30,6 +30,8 @@ public class UserProfileDbInitializer {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             statement.execute(createTablesSql);
+        } catch (SQLException e) {
+            throw new SQLException("INIT ERROR", e);
         }
     }
 
