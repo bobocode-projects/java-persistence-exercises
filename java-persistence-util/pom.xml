@@ -9,23 +9,13 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>2-0-jdbc-api</artifactId>
+    <artifactId>java-persistence-util</artifactId>
+    <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
-        <module>2-1-1-product-dao</module>
+        <module>jdbc-util</module>
+        <module>persistence-util</module>
     </modules>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>9.4-1202-jdbc4</version>
-        </dependency>
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <version>1.4.197</version>
-        </dependency>
-    </dependencies>
 </project>
