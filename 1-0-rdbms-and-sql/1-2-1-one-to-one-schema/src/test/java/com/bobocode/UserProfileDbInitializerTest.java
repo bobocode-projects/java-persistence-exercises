@@ -30,7 +30,7 @@ public class UserProfileDbInitializerTest {
 
     @Test
     @Order(1)
-    @DisplayName("users table has correct name")
+    @DisplayName("The users table has correct name")
     void usersTableHasCorrectName() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
@@ -60,7 +60,7 @@ public class UserProfileDbInitializerTest {
 
     @Test
     @Order(3)
-    @DisplayName("users table has all the required columns")
+    @DisplayName("The users table has all the required columns")
     void usersTableHasAllRequiredColumns() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
@@ -76,7 +76,7 @@ public class UserProfileDbInitializerTest {
 
     @Test
     @Order(4)
-    @DisplayName("users table String columns have correct type and length")
+    @DisplayName("The users table String columns have correct type and length")
     void testUsersTableStringColumnsHaveCorrectTypeAndLength() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
@@ -108,7 +108,7 @@ public class UserProfileDbInitializerTest {
 
     @Test
     @Order(6)
-    @DisplayName("users table required columns have Not Null constrains")
+    @DisplayName("The users table required columns have Not Null constrains")
     void usersTableRequiredColumnsHaveHaveNotNullConstraint() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
@@ -123,7 +123,7 @@ public class UserProfileDbInitializerTest {
 
     @Test
     @Order(7)
-    @DisplayName("users table has primary key")
+    @DisplayName("The users table has primary key")
     void usersTableHasPrimaryKey() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
@@ -139,7 +139,7 @@ public class UserProfileDbInitializerTest {
 
     @Test
     @Order(8)
-    @DisplayName("users table primary key has correct name")
+    @DisplayName("The users table primary key has correct name")
     void usersTablePrimaryKeyHasCorrectName() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
@@ -155,7 +155,7 @@ public class UserProfileDbInitializerTest {
 
     @Test
     @Order(9)
-    @DisplayName("users table primary key based on id field")
+    @DisplayName("The users table primary key based on id field")
     void usersTablePrimaryKeyBasedOnIdField() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
@@ -171,7 +171,7 @@ public class UserProfileDbInitializerTest {
 
     @Test
     @Order(10)
-    @DisplayName("users table has correct alternative key")
+    @DisplayName("The users table has correct alternative key")
     void testUsersTableHasCorrectAlternativeKey() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
@@ -203,7 +203,7 @@ public class UserProfileDbInitializerTest {
 
     @Test
     @Order(12)
-    @DisplayName("profiles table group id is Bigint")
+    @DisplayName("The profiles table group id is Bigint")
     void testProfilesGroupIdTypeIsBigint() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
@@ -219,7 +219,7 @@ public class UserProfileDbInitializerTest {
 
     @Test
     @Order(13)
-    @DisplayName("profiles table has all the required columns")
+    @DisplayName("The profiles table has all the required columns")
     void testProfilesTableHasAllRequiredColumns() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
@@ -235,7 +235,7 @@ public class UserProfileDbInitializerTest {
 
     @Test
     @Order(14)
-    @DisplayName("profiles table string columns have correct type and length")
+    @DisplayName("The profiles table string columns have correct type and length")
     void profilesTableStringColumnsHaveCorrectTypeAndLength() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
@@ -251,7 +251,7 @@ public class UserProfileDbInitializerTest {
 
     @Test
     @Order(15)
-    @DisplayName("profiles table has primary key")
+    @DisplayName("The profiles table has primary key")
     void profilesTablesHasPrimaryKey() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
@@ -266,7 +266,7 @@ public class UserProfileDbInitializerTest {
 
     @Test
     @Order(16)
-    @DisplayName("profiles table primary key has correct name")
+    @DisplayName("The profiles table primary key has correct name")
     void profilesTablePrimaryKeyHasCorrectName() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
@@ -282,7 +282,7 @@ public class UserProfileDbInitializerTest {
 
     @Test
     @Order(17)
-    @DisplayName("profiles table primary key based on foreign key column")
+    @DisplayName("The profiles table primary key based on foreign key column")
     void profilesTablePrimaryKeyBasedOnForeignKeyColumn() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
@@ -298,7 +298,7 @@ public class UserProfileDbInitializerTest {
 
     @Test
     @Order(18)
-    @DisplayName("profiles table has foreign key to users")
+    @DisplayName("The profiles table has foreign key to users")
     void testProfilesHasForeignKeyToUsers() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
@@ -313,7 +313,7 @@ public class UserProfileDbInitializerTest {
 
     @Test
     @Order(19)
-    @DisplayName("profiles table foreign key to users has correct name")
+    @DisplayName("The profiles table foreign key to users has correct name")
     void profilesForeignKeyToUsersHasCorrectName() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
