@@ -15,6 +15,7 @@
 
     <modules>
         <module>jdbc-util</module>
+        <module>persistence-util</module>
     </modules>
 
     <dependencies>
