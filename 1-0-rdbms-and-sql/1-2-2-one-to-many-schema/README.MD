@@ -1,4 +1,4 @@
-# <img src="https://raw.githubusercontent.com/bobocode-projects/resources/master/image/logo_transparent_background.png" height=50/>Wall Street db initializer exercise :muscle:
+# <img src="https://raw.githubusercontent.com/bobocode-projects/resources/master/image/logo_transparent_background.png" height=50/>Wall Street db initializer exercise 💪
 Improve your database design and SQL skills
 ### Task
 `WallStreetDbInitializer` provides an API that allows to create(initialize) a database tables to store broker information,
@@ -12,15 +12,15 @@ The purpose of the task is to **design a database table following docs and namin
 
 To verify your implementation, run `WallStreetDbInitializerTest.java`
 
-### Pre-conditions :heavy_exclamation_mark:
+### Pre-conditions ❗
 You're supposed to be familiar with database design and naming convention, *JDBC API* and *SQL*
 
-### How to start :question:
+### How to start ❓
 * Just clone the repository and start implementing the **todo** section, verify your changes by running tests
 * If you don't have enough knowledge about this domain, check out the [links below](#related-materials-information_source)
 * Don't worry if you got stuck, checkout the **exercise/completed** branch and see the final implementation
  
-### Related materials :information_source:
+### Related materials ℹ
  * [JDBC API basics tutorial](https://github.com/bobocode-projects/jdbc-api-tutorial/tree/master/jdbc-basics) <img src="https://raw.githubusercontent.com/bobocode-projects/resources/master/image/logo_transparent_background.png" height=20/>
  
 
