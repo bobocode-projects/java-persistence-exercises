@@ -1,54 +1,25 @@
 /*
 
-WallStreet database should store information about brokers, sales groups and its relations.
+User profile database stores information about users and their work profiles.
 
-Each broker must have a unique username. First and last names are also mandatory.
+Each user has one and only one work profile.
 
-A sales group is a special group that has its own restrictions. Sale groups are used to organize the work of brokers.
-Each group mush have a unique name, transaction type (string), and max transaction amount (a number). All field are
-mandatory.
-
-A sales group can consists of more than one broker, while each broker can be associated with more than one sale group.
+Each user has stored first and last names, email and birthday which are mandatory. Email is a unique value.
+A profile for each user is optional, and consists of optional information: city, job_position, company and education.
+All these fields are regular strings without restrictions.
 
   TECH NOTES AND NAMING CONVENTION
 - All tables, columns and constraints are named using "snake case" naming convention
-- All table names must be singular (e.g. "user", not "users")
-- All tables (except link tables) should have an id of type BIGINT, which is a primary key
-- Link tables should have composite primary key, that consists of two other foreign key columns
+- All table names must be plural (e.g. "companies", not "company")
+- All tables (except link tables) should have a single-value identifier of type BIGINT, which is a primary key
 - All primary key, foreign key, and unique constraint should be named according to the naming convention.
-- All link tables should have a composite key that consists of two foreign key columns
+- All "1 - optional 1" relations should be handled using the same primary key value for both tables. E.g. child table
+should have a column that stores primary key from a parent table, which is a foreign key and primary key at the same time
 
-- All primary keys should be named according to the following rule "PK_table_name"
-- All foreign keys should be named according to the following rule "FK_table_name_reference_table_name"
-- All alternative keys (unique) should be named according to the following rule "UQ_table_name_column_name"
+- All primary keys should be named according to the following rule "table_name_PK"
+- All foreign keys should be named according to the following rule "table_name_reference_table_name_FK"
+- All alternative keys (unique) should be named according to the following rule "table_name_column_name_AK"
 
 */
 
-CREATE TABLE IF NOT EXISTS broker (
-  id         BIGINT,
-  username   VARCHAR(255) NOT NULL,
-  first_name VARCHAR(255) NOT NULL,
-  last_name  VARCHAR(255) NOT NULL,
-  CONSTRAINT PK_broker PRIMARY KEY (id),
-  CONSTRAINT UQ_broker_username UNIQUE (username)
-);
-
-
-CREATE TABLE IF NOT EXISTS sales_group (
-  id                     BIGINT,
-  name                   VARCHAR(255) NOT NULL,
-  transaction_type       VARCHAR(255) NOT NULL,
-  max_transaction_amount INT          NOT NULL,
-  CONSTRAINT PK_sales_group PRIMARY KEY (id),
-  CONSTRAINT UQ_sales_group_name UNIQUE (name)
-);
-
-
-CREATE TABLE IF NOT EXISTS broker_sales_group (
-  broker_id      BIGINT NOT NULL,
-  sales_group_id BIGINT NOT NULL,
-  CONSTRAINT PK_broker_sales_group PRIMARY KEY (broker_id, sales_group_id),
-  CONSTRAINT FK_broker_sales_group_broker FOREIGN KEY (broker_id) REFERENCES broker,
-  CONSTRAINT FK_broker_sales_group_sales_group FOREIGN KEY (sales_group_id) REFERENCES sales_group
-);
-
+-- TODO: implement the SQL according to the description
