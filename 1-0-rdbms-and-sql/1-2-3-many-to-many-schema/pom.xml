@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>1-2-2-one-to-many-schema</artifactId>
+    <artifactId>1-2-3-many-to-many-schema</artifactId>
 
     <dependencies>
         <dependency>

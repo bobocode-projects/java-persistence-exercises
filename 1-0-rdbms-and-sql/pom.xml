@@ -14,7 +14,7 @@
 
     <modules>
         <module>1-2-1-one-to-one-schema</module>
-        <module>1-2-2-one-to-many-schema</module>
+        <module>1-2-3-many-to-many-schema</module>
     </modules>
 
 </project>
