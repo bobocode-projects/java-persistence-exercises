@@ -1,8 +1,7 @@
 package com.bobocode;
 
 import com.bobocode.util.JdbcUtil;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -12,10 +11,10 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class AccountDbInitializerTest {
     private static DataSource dataSource;
 
@@ -27,7 +26,9 @@ public class AccountDbInitializerTest {
     }
 
     @Test
-    void testTableHasCorrectName() throws SQLException {
+    @Order(1)
+    @DisplayName("The table has a correct name")
+    void tableHasCorrectName() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
 
@@ -35,12 +36,14 @@ public class AccountDbInitializerTest {
             resultSet.next();
             String tableName = resultSet.getString("table_name");
 
-            assertEquals("account", tableName);
+            assertThat(tableName).isEqualTo("account");
         }
     }
 
     @Test
-    void testTableHasPrimaryKey() throws SQLException {
+    @Order(2)
+    @DisplayName("The table has a primary key")
+    void tableHasPrimaryKey() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
@@ -53,51 +56,9 @@ public class AccountDbInitializerTest {
     }
 
     @Test
-    void testPrimaryKeyHasCorrectName() throws SQLException {
-        try (Connection connection = dataSource.getConnection()) {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'account' AND constraint_type = 'PRIMARY_KEY';");
-
-            resultSet.next();
-            String pkConstraintName = resultSet.getString("constraint_name");
-
-            assertEquals("account_pk", pkConstraintName);
-        }
-    }
-
-    @Test
-    void testPrimaryKeyBasedOnIdField() throws SQLException {
-        try (Connection connection = dataSource.getConnection()) {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'account' AND constraint_type = 'PRIMARY_KEY';");
-
-            resultSet.next();
-            String pkColumn = resultSet.getString("column_list");
-
-            assertEquals("id", pkColumn);
-        }
-    }
-
-    @Test
-    void testTableHasCorrectAlternativeKey() throws SQLException {
-        try (Connection connection = dataSource.getConnection()) {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'account' AND constraint_type = 'UNIQUE';");
-
-            resultSet.next();
-            String uniqueConstraintName = resultSet.getString("constraint_name");
-            String uniqueConstraintColumn = resultSet.getString("column_list");
-
-            assertEquals("account_email_uq", uniqueConstraintName);
-            assertEquals("email", uniqueConstraintColumn);
-        }
-    }
-
-    @Test
-    void testTableHasAllRequiredColumns() throws SQLException {
+    @Order(3)
+    @DisplayName("The table has all the required columns")
+    void tableHasAllRequiredColumns() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
@@ -105,37 +66,15 @@ public class AccountDbInitializerTest {
 
             List<String> columns = fetchColumnsNames(resultSet);
 
-            assertEquals(8, columns.size());
+            assertThat(columns.size()).isEqualTo(8);
             assertTrue(columns.containsAll(List.of("id", "first_name", "last_name", "email", "gender", "balance", "birthday", "creation_time")));
         }
     }
 
-    private List<String> fetchColumnsNames(ResultSet resultSet) throws SQLException {
-        List<String> columns = new ArrayList<>();
-        while (resultSet.next()) {
-            String columnName = resultSet.getString("column_name");
-            columns.add(columnName);
-        }
-        return columns;
-    }
-
-
     @Test
-    void testRequiredColumnsHaveHaveNotNullConstraint() throws SQLException {
-        try (Connection connection = dataSource.getConnection()) {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'account' AND nullable = false;");
-
-            List<String> notNullColumns = fetchColumnsNames(resultSet);
-
-            assertEquals(7, notNullColumns.size());
-            assertTrue(notNullColumns.containsAll(List.of("id", "first_name", "last_name", "email", "gender", "birthday", "creation_time")));
-        }
-    }
-
-    @Test
-    void testIdHasTypeBiInteger() throws SQLException {
+    @Order(4)
+    @DisplayName("Id column has a type of BIGINT")
+    void idHasTypeBigInteger() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
@@ -144,56 +83,30 @@ public class AccountDbInitializerTest {
             resultSet.next();
             String idTypeName = resultSet.getString("type_name");
 
-            assertEquals("BIGINT", idTypeName);
+            assertThat(idTypeName).isEqualTo("BIGINT");
         }
     }
 
     @Test
-    void testCreationTimeHasTypeTimestamp() throws SQLException {
+    @Order(5)
+    @DisplayName("String columns have correct type and length")
+    void stringColumnsHaveCorrectTypeAndLength() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'account' AND column_name = 'creation_time';");
+            ResultSet resultSet = statement.executeQuery("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS" +
+                    " WHERE table_name = 'account' AND type_name = 'VARCHAR' AND character_maximum_length = 255;");
 
-            resultSet.next();
-            String creationTimeColumnType = resultSet.getString("type_name");
+            List<String> stringColumns = fetchColumnsNames(resultSet);
 
-            assertEquals("TIMESTAMP", creationTimeColumnType);
+            assertThat(stringColumns.size()).isEqualTo(4);
+            assertTrue(stringColumns.containsAll(List.of("first_name", "last_name", "email", "gender")));
         }
     }
 
     @Test
-    void testCreationTimeHasDefaultValue() throws SQLException {
-        try (Connection connection = dataSource.getConnection()) {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'account' AND column_name = 'creation_time';");
-
-            resultSet.next();
-            String creationTimeColumnDefault = resultSet.getString("column_default");
-
-            assertEquals("NOW()", creationTimeColumnDefault);
-        }
-    }
-
-    @Test
-    void testEmailColumnHasCorrectSize() throws SQLException {
-        try (Connection connection = dataSource.getConnection()) {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'account' AND column_name = 'email';");
-
-            resultSet.next();
-            String emailColumnType = resultSet.getString("type_name");
-            int emailColumnMaxLength = resultSet.getInt("character_maximum_length");
-
-            assertEquals("VARCHAR", emailColumnType);
-            assertEquals(255, emailColumnMaxLength);
-        }
-    }
-
-    @Test
-    void testBirthdayColumnHasCorrectType() throws SQLException {
+    @Order(6)
+    @DisplayName("Birthday column has a correct type")
+    void birthdayColumnHasCorrectType() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
@@ -202,12 +115,14 @@ public class AccountDbInitializerTest {
             resultSet.next();
             String birthdayColumnType = resultSet.getString("type_name");
 
-            assertEquals("DATE", birthdayColumnType);
+            assertThat(birthdayColumnType).isEqualTo("DATE");
         }
     }
 
     @Test
-    void testBalanceColumnHasCorrectType() throws SQLException {
+    @Order(7)
+    @DisplayName("Balance column has a correct type")
+    void balanceColumnHasCorrectType() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
@@ -218,14 +133,16 @@ public class AccountDbInitializerTest {
             int balanceColumnPrecision = resultSet.getInt("numeric_precision");
             int balanceColumnScale = resultSet.getInt("numeric_scale");
 
-            assertEquals("DECIMAL", balanceColumnType);
-            assertEquals(19, balanceColumnPrecision);
-            assertEquals(4, balanceColumnScale);
+            assertThat(balanceColumnType).isEqualTo("DECIMAL");
+            assertThat(balanceColumnPrecision).isEqualTo(19);
+            assertThat(balanceColumnScale).isEqualTo(4);
         }
     }
 
     @Test
-    void testBalanceIsNotMandatory() throws SQLException {
+    @Order(8)
+    @DisplayName("Balance column is not mandatory")
+    void balanceIsNotMandatory() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
@@ -239,18 +156,110 @@ public class AccountDbInitializerTest {
     }
 
     @Test
-    void testStringColumnsHaveCorrectTypeAndLength() throws SQLException {
+    @Order(9)
+    @DisplayName("Creation time column has type TIMESTAMP")
+    void creationTimeHasTypeTimestamp() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'account' AND type_name = 'VARCHAR' AND character_maximum_length = 255;");
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
+                    " WHERE table_name = 'account' AND column_name = 'creation_time';");
 
-            List<String> stringColumns = fetchColumnsNames(resultSet);
+            resultSet.next();
+            String creationTimeColumnType = resultSet.getString("type_name");
 
-            assertEquals(4, stringColumns.size());
-            assertTrue(stringColumns.containsAll(List.of("first_name", "last_name", "email", "gender")));
+            assertThat(creationTimeColumnType).isEqualTo("TIMESTAMP");
+        }
+    }
+
+    @Test
+    @Order(10)
+    @DisplayName("Creation time has a default value")
+    void creationTimeHasDefaultValue() throws SQLException {
+        try (Connection connection = dataSource.getConnection()) {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
+                    " WHERE table_name = 'account' AND column_name = 'creation_time';");
+
+            resultSet.next();
+            String creationTimeColumnDefault = resultSet.getString("column_default");
+
+            assertThat(creationTimeColumnDefault).isEqualTo("NOW()");
+        }
+    }
+
+    @Test
+    @Order(11)
+    @DisplayName("The required columns have NOT NULL constraint")
+    void requiredColumnsHaveNotNullConstraint() throws SQLException {
+        try (Connection connection = dataSource.getConnection()) {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
+                    " WHERE table_name = 'account' AND nullable = false;");
+
+            List<String> notNullColumns = fetchColumnsNames(resultSet);
+
+            assertThat(notNullColumns.size()).isEqualTo(7);
+            assertTrue(notNullColumns.containsAll(List.of("id", "first_name", "last_name", "email", "gender", "birthday", "creation_time")));
+        }
+    }
+
+    @Test
+    @Order(12)
+    @DisplayName("The primary key has a correct name")
+    void primaryKeyHasCorrectName() throws SQLException {
+        try (Connection connection = dataSource.getConnection()) {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
+                    " WHERE table_name = 'account' AND constraint_type = 'PRIMARY_KEY';");
+
+            resultSet.next();
+            String pkConstraintName = resultSet.getString("constraint_name");
+
+            assertThat(pkConstraintName).isEqualTo("account_pk");
+        }
+    }
+
+    @Test
+    @Order(13)
+    @DisplayName("The primary key id based on the Id field")
+    void primaryKeyBasedOnIdField() throws SQLException {
+        try (Connection connection = dataSource.getConnection()) {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
+                    " WHERE table_name = 'account' AND constraint_type = 'PRIMARY_KEY';");
+
+            resultSet.next();
+            String pkColumn = resultSet.getString("column_list");
+
+            assertThat(pkColumn).isEqualTo("id");
+        }
+    }
+
+    @Test
+    @Order(14)
+    @DisplayName("The table has a correct alternative key")
+    void tableHasCorrectAlternativeKey() throws SQLException {
+        try (Connection connection = dataSource.getConnection()) {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
+                    " WHERE table_name = 'account' AND constraint_type = 'UNIQUE';");
+
+            resultSet.next();
+            String uniqueConstraintName = resultSet.getString("constraint_name");
+            String uniqueConstraintColumn = resultSet.getString("column_list");
+
+            assertThat(uniqueConstraintName).isEqualTo("account_email_uq");
+            assertThat(uniqueConstraintColumn).isEqualTo("email");
         }
     }
 
 
+    private List<String> fetchColumnsNames(ResultSet resultSet) throws SQLException {
+        List<String> columns = new ArrayList<>();
+        while (resultSet.next()) {
+            String columnName = resultSet.getString("column_name");
+            columns.add(columnName);
+        }
+        return columns;
+    }
 }
