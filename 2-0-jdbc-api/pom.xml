@@ -13,6 +13,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>2-0-2-create-table</module>
         <module>2-1-1-product-dao</module>
     </modules>
 
