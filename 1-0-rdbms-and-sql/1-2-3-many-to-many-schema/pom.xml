@@ -3,18 +3,20 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>java-persistence-course</artifactId>
+        <artifactId>1-0-rdbms-and-sql</artifactId>
         <groupId>com.bobocode</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>1-0-rdbms-and-sql</artifactId>
-    <packaging>pom</packaging>
+    <artifactId>1-2-3-many-to-many-schema</artifactId>
 
-    <modules>
-        <module>1-2-1-one-to-one-schema</module>
-        <module>1-2-3-many-to-many-schema</module>
-    </modules>
+    <dependencies>
+        <dependency>
+            <groupId>com.bobocode</groupId>
+            <artifactId>jdbc-util</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
 
 </project>
