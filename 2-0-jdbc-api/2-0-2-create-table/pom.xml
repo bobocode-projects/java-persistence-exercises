@@ -11,12 +11,4 @@
 
     <artifactId>2-0-2-create-table</artifactId>
 
-    <dependencies>
-        <dependency>
-            <groupId>com.bobocode</groupId>
-            <artifactId>jdbc-util</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-    </dependencies>
-
 </project>
