@@ -1,126 +1,156 @@
 package com.bobocode;
 
 import com.bobocode.model.Movie;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import javax.persistence.*;
 import java.lang.reflect.Field;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class JpaEntityMovieTest {
 
     @Test
-    public void testClassIsMarkedAsJpaEntity() {
-        assertThat(Movie.class.getAnnotation(Entity.class), notNullValue());
+    @Order(1)
+    @DisplayName("The class is marked as JPA entity")
+    public void classIsMarkedAsJpaEntity() {
+        assertThat(Movie.class.getAnnotation(Entity.class)).isNotNull();
     }
 
     @Test
-    public void testTableIsSpecified() {
+    @Order(2)
+    @DisplayName("@Table annotation is specified")
+    public void tableIsSpecified() {
         Table table = Movie.class.getAnnotation(Table.class);
 
-        assertThat(table, notNullValue());
-        assertThat(table.name(), is("movie"));
+        assertThat(table).isNotNull();
+        assertThat(table.name()).isEqualTo("movie");
     }
 
     @Test
-    public void testEntityHasId() throws NoSuchFieldException {
+    @Order(3)
+    @DisplayName("The entity has an ID")
+    public void entityHasId() throws NoSuchFieldException {
         Field idField = Movie.class.getDeclaredField("id");
 
-        assertThat(idField.getAnnotation(Id.class), notNullValue());
+        assertThat(idField.getAnnotation(Id.class)).isNotNull();
     }
 
     @Test
-    public void testIdTypeIsLong() throws NoSuchFieldException {
+    @Order(4)
+    @DisplayName("Id field type is Long")
+    public void idTypeIsLong() throws NoSuchFieldException {
+        Field idField = Movie.class.getDeclaredField("id");
+        String idTypeName = idField.getType().getName();
+        String longName = Long.class.getName();
+
+        assertThat(idTypeName).isEqualTo(longName);
+    }
+
+    @Test
+    @Order(5)
+    @DisplayName("Id column id generated")
+    public void idIsGenerated() throws NoSuchFieldException {
         Field idField = Movie.class.getDeclaredField("id");
 
-        assertThat(idField.getType().getName(), is(Long.class.getName()));
+        assertThat(idField.getAnnotation(GeneratedValue.class)).isNotNull();
     }
 
     @Test
-    public void testIdIsGenerated() throws NoSuchFieldException {
-        Field idField = Movie.class.getDeclaredField("id");
-
-        assertThat(idField.getAnnotation(GeneratedValue.class), notNullValue());
-    }
-
-    @Test
-    public void testIdGenerationStrategyIsIdentity() throws NoSuchFieldException {
+    @Order(6)
+    @DisplayName("Id generation strategy is Identity")
+    public void idGenerationStrategyIsIdentity() throws NoSuchFieldException {
         Field idField = Movie.class.getDeclaredField("id");
         GeneratedValue generatedValue = idField.getAnnotation(GeneratedValue.class);
 
-        assertThat(generatedValue.strategy(), is(GenerationType.IDENTITY));
+        assertThat(generatedValue.strategy()).isEqualTo(GenerationType.IDENTITY);
     }
 
     @Test
-    public void testMovieNameIsMarkedAsColumn() throws NoSuchFieldException {
+    @Order(7)
+    @DisplayName("Name field is marked as Column")
+    public void movieNameIsMarkedAsColumn() throws NoSuchFieldException {
         Field nameField = Movie.class.getDeclaredField("name");
 
-        assertThat(nameField.getAnnotation(Column.class), notNullValue());
+        assertThat(nameField.getAnnotation(Column.class)).isNotNull();
     }
 
     @Test
-    public void testMovieNameColumnIsSpecified() throws NoSuchFieldException {
-        Field nameField = Movie.class.getDeclaredField("name");
-        Column column = nameField.getAnnotation(Column.class);
-
-        assertThat(column.name(), is("name"));
-    }
-
-    @Test
-    public void testMovieNameColumnIsNotNull() throws NoSuchFieldException {
+    @Order(8)
+    @DisplayName("Name column is specified")
+    public void movieNameColumnIsSpecified() throws NoSuchFieldException {
         Field nameField = Movie.class.getDeclaredField("name");
         Column column = nameField.getAnnotation(Column.class);
 
-        assertThat(column.nullable(), is(false));
+        assertThat(column.name()).isEqualTo("name");
     }
 
     @Test
-    public void testDirectorIsMarkedAsColumn() throws NoSuchFieldException {
+    @Order(9)
+    @DisplayName("Name column is not nullable")
+    public void movieNameColumnIsNotNull() throws NoSuchFieldException {
+        Field nameField = Movie.class.getDeclaredField("name");
+        Column column = nameField.getAnnotation(Column.class);
+
+        assertThat(column.nullable()).isEqualTo(false);
+    }
+
+    @Test
+    @Order(10)
+    @DisplayName("Director field id marked as Column")
+    public void directorIsMarkedAsColumn() throws NoSuchFieldException {
         Field declaredField = Movie.class.getDeclaredField("director");
 
-        assertThat(declaredField.getAnnotation(Column.class), notNullValue());
+        assertThat(declaredField.getAnnotation(Column.class)).isNotNull();
     }
 
     @Test
-    public void testDirectorColumnIsSpecified() throws NoSuchFieldException {
+    @Order(11)
+    @DisplayName("Director column id specified")
+    public void directorColumnIsSpecified() throws NoSuchFieldException {
         Field declaredField = Movie.class.getDeclaredField("director");
         Column column = declaredField.getAnnotation(Column.class);
 
-        assertThat(column.name(), is("director"));
+        assertThat(column.name()).isEqualTo("director");
     }
 
     @Test
-    public void testDirectorColumnIsNotNull() throws NoSuchFieldException {
+    @Order(12)
+    @DisplayName("Director column id not nullable")
+    public void directorColumnIsNotNull() throws NoSuchFieldException {
         Field declaredField = Movie.class.getDeclaredField("director");
         Column column = declaredField.getAnnotation(Column.class);
 
-        assertThat(column.nullable(), is(false));
+        assertThat(column.nullable()).isEqualTo(false);
     }
 
     @Test
-    public void testDurationIsMarkedAsColumn() throws NoSuchFieldException {
+    @Order(13)
+    @DisplayName("Duration field is marked as Column")
+    public void durationIsMarkedAsColumn() throws NoSuchFieldException {
         Field declaredField = Movie.class.getDeclaredField("durationSeconds");
 
-        assertThat(declaredField.getAnnotation(Column.class), notNullValue());
+        assertThat(declaredField.getAnnotation(Column.class)).isNotNull();
     }
 
     @Test
-    public void testDurationColumnIsSpecified() throws NoSuchFieldException {
-        Field declaredField = Movie.class.getDeclaredField("durationSeconds");
-        Column column = declaredField.getAnnotation(Column.class);
-
-        assertThat(column.name(), is("duration"));
-    }
-
-    @Test
-    public void testDurationColumnIsNullable() throws NoSuchFieldException {
+    @Order(14)
+    @DisplayName("Duration column is specified")
+    public void durationColumnIsSpecified() throws NoSuchFieldException {
         Field declaredField = Movie.class.getDeclaredField("durationSeconds");
         Column column = declaredField.getAnnotation(Column.class);
 
-        assertThat(column.nullable(), is(true));
+        assertThat(column.name()).isEqualTo("duration");
     }
 
+    @Test
+    @Order(15)
+    @DisplayName("Duration column is not nullable")
+    public void durationColumnIsNullable() throws NoSuchFieldException {
+        Field declaredField = Movie.class.getDeclaredField("durationSeconds");
+        Column column = declaredField.getAnnotation(Column.class);
+
+        assertThat(column.nullable()).isEqualTo(true);
+    }
 }
