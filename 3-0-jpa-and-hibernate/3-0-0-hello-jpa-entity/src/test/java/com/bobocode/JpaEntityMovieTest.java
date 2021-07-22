@@ -20,7 +20,7 @@ public class JpaEntityMovieTest {
 
     @Test
     @Order(2)
-    @DisplayName("@Table annotation is specified")
+    @DisplayName("@Table name is specified")
     public void tableIsSpecified() {
         Table table = Movie.class.getAnnotation(Table.class);
 
@@ -50,7 +50,7 @@ public class JpaEntityMovieTest {
 
     @Test
     @Order(5)
-    @DisplayName("Id column id generated")
+    @DisplayName("Id field is marked as generated value")
     public void idIsGenerated() throws NoSuchFieldException {
         Field idField = Movie.class.getDeclaredField("id");
 
@@ -78,7 +78,7 @@ public class JpaEntityMovieTest {
 
     @Test
     @Order(8)
-    @DisplayName("Name column is specified")
+    @DisplayName("Name column name is specified explicitly")
     public void movieNameColumnIsSpecified() throws NoSuchFieldException {
         Field nameField = Movie.class.getDeclaredField("name");
         Column column = nameField.getAnnotation(Column.class);
@@ -98,7 +98,7 @@ public class JpaEntityMovieTest {
 
     @Test
     @Order(10)
-    @DisplayName("Director field id marked as Column")
+    @DisplayName("Director field is marked as column")
     public void directorIsMarkedAsColumn() throws NoSuchFieldException {
         Field declaredField = Movie.class.getDeclaredField("director");
 
@@ -107,7 +107,7 @@ public class JpaEntityMovieTest {
 
     @Test
     @Order(11)
-    @DisplayName("Director column id specified")
+    @DisplayName("Director column name is specified explicitly")
     public void directorColumnIsSpecified() throws NoSuchFieldException {
         Field declaredField = Movie.class.getDeclaredField("director");
         Column column = declaredField.getAnnotation(Column.class);
@@ -117,7 +117,7 @@ public class JpaEntityMovieTest {
 
     @Test
     @Order(12)
-    @DisplayName("Director column id not nullable")
+    @DisplayName("Director column is not nullable")
     public void directorColumnIsNotNull() throws NoSuchFieldException {
         Field declaredField = Movie.class.getDeclaredField("director");
         Column column = declaredField.getAnnotation(Column.class);
@@ -127,7 +127,7 @@ public class JpaEntityMovieTest {
 
     @Test
     @Order(13)
-    @DisplayName("Duration field is marked as Column")
+    @DisplayName("Duration field is marked as column")
     public void durationIsMarkedAsColumn() throws NoSuchFieldException {
         Field declaredField = Movie.class.getDeclaredField("durationSeconds");
 
@@ -136,7 +136,7 @@ public class JpaEntityMovieTest {
 
     @Test
     @Order(14)
-    @DisplayName("Duration column is specified")
+    @DisplayName("Duration column name is specified explicitly")
     public void durationColumnIsSpecified() throws NoSuchFieldException {
         Field declaredField = Movie.class.getDeclaredField("durationSeconds");
         Column column = declaredField.getAnnotation(Column.class);
