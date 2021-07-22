@@ -14,6 +14,7 @@
 
     <modules>
         <module>3-0-0-hello-jpa-entity</module>
+        <module>3-0-1-hello-persistence-xml</module>
     </modules>
 
     <dependencies>
