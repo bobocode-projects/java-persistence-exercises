@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence" version="2.1">
+
+    <!--todo: configure a persistence unit name: TuttiFrutti-->
+    <!--todo: add class Song to this persistence unit-->
+    <!--todo: configure a hibernate connection url for in-memory H2 database-->
+    <!--database name: tutti_frutti_db-->
+    <!--database additional properties: DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false-->
+    <!--todo: configure a hibernate connection username: little_richard-->
+    <!--todo: configure a hibernate connection password: rock_n_roll_is_alive-->
+    <!--todo: configure a hibernate SQL dialect for H2 database-->
+    <!--todo: configure hibernate generate DDL and create database-->
+
+</persistence>
