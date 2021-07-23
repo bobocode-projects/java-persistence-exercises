@@ -24,30 +24,30 @@ A sales group can consists of more than one broker, while each broker can be ass
 
 */
 
-create table if not exists broker (
-    id         bigint,
-    username   varchar(255) not null,
-    first_name varchar(255) not null,
-    last_name  varchar(255) not null,
-    constraint pk_broker primary key (id),
-    constraint uq_broker_username unique (username)
-    );
+CREATE TABLE IF NOT EXISTS broker (
+    id         BIGINT,
+    username   VARCHAR(255) NOT NULL,
+    first_name VARCHAR(255) NOT NULL,
+    last_name  VARCHAR(255) NOT NULL,
+    CONSTRAINT PK_broker PRIMARY KEY (id),
+    CONSTRAINT UQ_broker_username UNIQUE (username)
+);
 
 
-create table if not exists sales_group (
-    id                     bigint,
-    name                   varchar(255) not null,
-    transaction_type       varchar(255) not null,
-    max_transaction_amount int          not null,
-    constraint pk_sales_group primary key (id),
-    constraint uq_sales_group_name unique (name)
-    );
+CREATE TABLE IF NOT EXISTS sales_group (
+    id                     BIGINT,
+    name                   VARCHAR(255) NOT NULL,
+    transaction_type       VARCHAR(255) NOT NULL,
+    max_transaction_amount INT          NOT NULL,
+    CONSTRAINT PK_sales_group PRIMARY KEY (id),
+    CONSTRAINT UQ_sales_group_name UNIQUE (name)
+);
 
 
-create table if not exists broker_sales_group (
-    broker_id      bigint not null,
-    sales_group_id bigint not null,
-    constraint pk_broker_sales_group primary key (broker_id, sales_group_id),
-    constraint fk_broker_sales_group_broker foreign key (broker_id) references broker,
-    constraint fk_broker_sales_group_sales_group foreign key (sales_group_id) references sales_group
-    );
+CREATE TABLE IF NOT EXISTS broker_sales_group (
+    broker_id      BIGINT NOT NULL,
+    sales_group_id BIGINT NOT NULL,
+    CONSTRAINT PK_broker_sales_group PRIMARY KEY (broker_id, sales_group_id),
+    CONSTRAINT FK_broker_sales_group_broker FOREIGN KEY (broker_id) REFERENCES broker,
+    CONSTRAINT FK_broker_sales_group_sales_group FOREIGN KEY (sales_group_id) REFERENCES sales_group
+);
