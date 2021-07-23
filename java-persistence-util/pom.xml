@@ -16,6 +16,8 @@
     <modules>
         <module>jdbc-util</module>
         <module>persistence-util</module>
+        <module>jpa-hibernate-util</module>
+        <module>jpa-hibernate-model</module>
     </modules>
 
     <dependencies>
@@ -28,6 +30,11 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>1.4.197</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate.javax.persistence</groupId>
+            <artifactId>hibernate-jpa-2.1-api</artifactId>
+            <version>1.0.2.Final</version>
         </dependency>
     </dependencies>
 
