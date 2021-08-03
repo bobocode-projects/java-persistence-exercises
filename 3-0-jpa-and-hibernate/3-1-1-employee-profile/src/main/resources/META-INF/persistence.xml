@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence" version="2.1">
+
+    <persistence-unit name="Employees">
+        <class>com.bobocode.model.Employee</class>
+        <class>com.bobocode.model.EmployeeProfile</class>
+
+        <properties>
+            <property name="hibernate.connection.url" value="jdbc:h2:mem:bobocode_db;DB_CLOSE_DELAY=-1"/>
+            <property name="hibernate.connection.driver_class" value="org.h2.Driver"/>
+            <property name="hibernate.connection.username" value="bobouser"/>
+            <property name="hibernate.connection.password" value="bobopass"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+            <property name="hibernate.show_sql" value="false"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.hbm2ddl.auto" value="create"/>
+        </properties>
+    </persistence-unit>
+
+</persistence>
