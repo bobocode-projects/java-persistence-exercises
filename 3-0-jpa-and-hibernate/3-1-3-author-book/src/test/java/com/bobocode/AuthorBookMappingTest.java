@@ -5,15 +5,9 @@ import com.bobocode.model.Book;
 import com.bobocode.util.EntityManagerUtil;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.Session;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.JoinTable;
-import javax.persistence.Persistence;
-import javax.persistence.PersistenceException;
-import javax.persistence.RollbackException;
+import javax.persistence.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.List;
@@ -21,15 +15,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AuthorBookMappingTest {
     private static EntityManagerUtil emUtil;
     private static EntityManagerFactory entityManagerFactory;
@@ -46,90 +36,77 @@ class AuthorBookMappingTest {
     }
 
     @Test
-    void testSaveBookOnly() {
+    @Order(1)
+    @DisplayName("Save a book only")
+    void saveBookOnly() {
         Book book = createRandomBook();
 
         emUtil.performWithinTx(entityManager -> entityManager.persist(book));
 
-        assertThat(book.getId(), notNullValue());
-    }
-
-    private Book createRandomBook() {
-        Book book = new Book();
-        book.setName(RandomStringUtils.randomAlphabetic(20));
-        book.setIsbn(RandomStringUtils.randomAlphabetic(30));
-        return book;
+        assertThat(book.getId()).isNotNull();
     }
 
     @Test
-    void testSaveBookWithoutName() {
+    @Order(2)
+    @DisplayName("Save book without a name")
+    void saveBookWithoutName() {
         Book book = createRandomBook();
         book.setName(null);
-        try {
-            emUtil.performWithinTx(entityManager -> entityManager.persist(book));
-            fail("Exception should be thrown");
-        } catch (Exception e) {
-            assertThat(e.getClass(), equalTo(PersistenceException.class));
-        }
+
+        assertThatExceptionOfType(PersistenceException.class).isThrownBy(() -> emUtil.performWithinTx(entityManager ->
+                entityManager.persist(book)));
     }
 
     @Test
-    void testSaveBookWithDuplicateIsbn() {
+    @Order(3)
+    @DisplayName("Save a Book with duplicated ISBN")
+    void saveBookWithDuplicateIsbn() {
         Book book = createRandomBook();
         emUtil.performWithinTx(entityManager -> entityManager.persist(book));
         Book bookWithDuplicateIsbn = createRandomBook();
         bookWithDuplicateIsbn.setIsbn(book.getIsbn());
 
-        try {
-            emUtil.performWithinTx(entityManager -> entityManager.persist(bookWithDuplicateIsbn));
-            fail("Exception should be thrown");
-        } catch (Exception e) {
-            assertThat(e.getClass(), equalTo(RollbackException.class));
-        }
+        assertThatExceptionOfType(RollbackException.class).isThrownBy(() ->
+                emUtil.performWithinTx(entityManager -> entityManager.persist(bookWithDuplicateIsbn)));
     }
 
     @Test
-    void testSaveAuthorOnly() {
+    @Order(4)
+    @DisplayName("Save an author only")
+    void saveAuthorOnly() {
         Author author = createRandomAuthor();
 
         emUtil.performWithinTx(entityManager -> entityManager.persist(author));
 
-        assertThat(author.getId(), notNullValue());
-    }
-
-    private Author createRandomAuthor() {
-        Author author = new Author();
-        author.setFirstName(RandomStringUtils.randomAlphabetic(20));
-        author.setLastName(RandomStringUtils.randomAlphabetic(20));
-        return author;
+        assertThat(author.getId()).isNotNull();
     }
 
     @Test
-    void testSaveAuthorWithoutFirstName() {
+    @Order(5)
+    @DisplayName("Save an author without a name")
+    void saveAuthorWithoutFirstName() {
         Author authorWithNullFirstName = createRandomAuthor();
         authorWithNullFirstName.setFirstName(null);
-        try {
-            emUtil.performWithinTx(entityManager -> entityManager.persist(authorWithNullFirstName));
-            fail("Exception should be thrown");
-        } catch (Exception e) {
-            assertThat(e.getClass(), equalTo(PersistenceException.class));
-        }
+
+        assertThatExceptionOfType(PersistenceException.class).isThrownBy(() ->
+                emUtil.performWithinTx(entityManager -> entityManager.persist(authorWithNullFirstName)));
     }
 
     @Test
-    void testSaveAuthorWithoutLastName() {
+    @Order(6)
+    @DisplayName("Save an author without a name")
+    void saveAuthorWithoutLastName() {
         Author authorWithNullLastName = createRandomAuthor();
         authorWithNullLastName.setLastName(null);
-        try {
-            emUtil.performWithinTx(entityManager -> entityManager.persist(authorWithNullLastName));
-            fail("Exception should be thrown");
-        } catch (Exception e) {
-            assertThat(e.getClass(), equalTo(PersistenceException.class));
-        }
+
+        assertThatExceptionOfType(PersistenceException.class).isThrownBy(() ->
+                emUtil.performWithinTx(entityManager -> entityManager.persist(authorWithNullLastName)));
     }
 
     @Test
-    void testAddNewBookForExistingAuthor() {
+    @Order(7)
+    @DisplayName("Add a new book for an existing author")
+    void addNewBookForExistingAuthor() {
         Author author = createRandomAuthor();
         emUtil.performWithinTx(entityManager -> entityManager.persist(author));
 
@@ -139,16 +116,18 @@ class AuthorBookMappingTest {
             managedAuthor.addBook(book);
         });
 
-        assertThat(book.getId(), notNullValue());
+        assertThat(book.getId()).isNotNull();
         emUtil.performWithinTx(entityManager -> {
             Book managedBook = entityManager.find(Book.class, book.getId());
-            assertThat(managedBook.getAuthors(), hasItem(author));
+            assertThat(managedBook.getAuthors()).contains(author);
         });
     }
 
 
     @Test
-    void testAddAuthorToExistingBook() {
+    @Order(8)
+    @DisplayName("Add an author to an existing book")
+    void addAuthorToExistingBook() {
         Book book = createRandomBook();
         emUtil.performWithinTx(entityManager -> entityManager.persist(book));
 
@@ -159,32 +138,36 @@ class AuthorBookMappingTest {
             entityManager.persist(author);
         });
 
-        assertThat(author.getId(), notNullValue());
+        assertThat(author.getId()).isNotNull();
         emUtil.performWithinTx(entityManager -> {
             Author managedAuthor = entityManager.find(Author.class, author.getId());
-            assertThat(managedAuthor.getBooks(), hasItem(book));
+            assertThat(managedAuthor.getBooks()).contains(book);
         });
     }
 
     @Test
-    void testSaveNewAuthorWithCoupleNewBooks() {
+    @Order(9)
+    @DisplayName("Save a new author with couple new books")
+    void saveNewAuthorWithCoupleNewBooks() {
         Author author = createRandomAuthor();
         List<Book> bookList = Stream.generate(this::createRandomBook).limit(3).collect(Collectors.toList());
         bookList.forEach(author::addBook);
 
         emUtil.performWithinTx(entityManager -> entityManager.persist(author));
 
-        assertThat(author.getId(), notNullValue());
-        assertThat(author.getBooks(), containsInAnyOrder(bookList.toArray()));
-        bookList.forEach(book -> assertThat(book.getAuthors(), hasItem(author)));
+        assertThat(author.getId()).isNotNull();
+        assertThat(author.getBooks()).containsExactlyInAnyOrderElementsOf(bookList);
+        bookList.forEach(book -> assertThat(book.getAuthors()).contains(author));
         emUtil.performWithinTx(entityManager -> {
             Author managedAuthor = entityManager.find(Author.class, author.getId());
-            assertThat(managedAuthor.getBooks(), containsInAnyOrder(bookList.toArray()));
+            assertThat(managedAuthor.getBooks()).containsExactlyInAnyOrderElementsOf(bookList);
         });
     }
 
     @Test
-    void testRemoveBookFromAuthor() {
+    @Order(10)
+    @DisplayName("Remove a book from an author")
+    void removeBookFromAuthor() {
         Author author = createRandomAuthor();
         Book book = createRandomBook();
         author.addBook(book);
@@ -195,15 +178,17 @@ class AuthorBookMappingTest {
             managedAuthor.removeBook(book);
         });
 
-        assertThat(book.getAuthors(), not(hasItem(author)));
+        assertThat(book.getAuthors()).doesNotContain(author);
         emUtil.performWithinTx(entityManager -> {
             Book managedBook = entityManager.find(Book.class, book.getId());
-            assertThat(managedBook.getAuthors(), not(hasItem(author)));
+            assertThat(managedBook.getAuthors()).doesNotContain(author);
         });
     }
 
     @Test
-    void testRemoveAuthor() {
+    @Order(11)
+    @DisplayName("Remove an author")
+    void removeAuthor() {
         Author author = createRandomAuthor();
         Book book = createRandomBook();
         author.addBook(book);
@@ -216,15 +201,17 @@ class AuthorBookMappingTest {
 
         emUtil.performWithinTx(entityManager -> {
             Author foundAccount = entityManager.find(Author.class, author.getId());
-            assertThat(foundAccount, nullValue());
+            assertThat(foundAccount).isNull();
 
             Book managedBook = entityManager.find(Book.class, book.getId());
-            assertThat(managedBook.getAuthors(), not(hasItem(author)));
+            assertThat(managedBook.getAuthors()).doesNotContain(author);
         });
     }
 
     @Test
-    void testRemoveBook() {
+    @Order(12)
+    @DisplayName("Remove a book")
+    void removeBook() {
         Author author = createRandomAuthor();
         Book book = createRandomBook();
         author.addBook(book);
@@ -238,49 +225,61 @@ class AuthorBookMappingTest {
 
         emUtil.performWithinTx(entityManager -> {
             Book foundBook = entityManager.find(Book.class, book.getId());
-            assertThat(foundBook, nullValue());
+            assertThat(foundBook).isNull();
 
             Author managedAuthor = entityManager.find(Author.class, author.getId());
-            assertThat(managedAuthor.getBooks(), not(hasItem(book)));
+            assertThat(managedAuthor.getBooks()).doesNotContain(book);
         });
     }
 
     @Test
-    void testBookSetAuthorsIsPrivate() throws NoSuchMethodException {
-        assertThat(Book.class.getDeclaredMethod("setAuthors", Set.class).getModifiers(), equalTo(Modifier.PRIVATE));
+    @Order(13)
+    @DisplayName("Authors to book setter method is private")
+    void bookSetAuthorsIsPrivate() throws NoSuchMethodException {
+        assertThat(Book.class.getDeclaredMethod("setAuthors", Set.class).getModifiers()).isEqualTo(Modifier.PRIVATE);
     }
 
     @Test
-    void testAuthorSetBooksIsPrivate() throws NoSuchMethodException {
-        assertThat(Author.class.getDeclaredMethod("setBooks", Set.class).getModifiers(), equalTo(Modifier.PRIVATE));
+    @Order(14)
+    @DisplayName("Books to authors setter method is private")
+    void authorSetBooksIsPrivate() throws NoSuchMethodException {
+        assertThat(Author.class.getDeclaredMethod("setBooks", Set.class).getModifiers()).isEqualTo(Modifier.PRIVATE);
     }
 
     @Test
-    void testAuthorBookLinkTableHasCorrectName() throws NoSuchFieldException {
+    @Order(15)
+    @DisplayName("Link table has a correct name")
+    void authorBookLinkTableHasCorrectName() throws NoSuchFieldException {
         Field booksField = Author.class.getDeclaredField("books");
         JoinTable joinTable = booksField.getAnnotation(JoinTable.class);
 
-        assertThat(joinTable.name(), equalTo("author_book"));
+        assertThat(joinTable.name()).isEqualTo("author_book");
     }
 
     @Test
-    void testLinkTableHasCorrectForeignKeyColumnNameToAuthor() throws NoSuchFieldException {
+    @Order(16)
+    @DisplayName("Link table has a correct foreign column name to author column")
+    void linkTableHasCorrectForeignKeyColumnNameToAuthor() throws NoSuchFieldException {
         Field booksField = Author.class.getDeclaredField("books");
         JoinTable joinTable = booksField.getAnnotation(JoinTable.class);
 
-        assertThat(joinTable.joinColumns()[0].name(), equalTo("author_id"));
+        assertThat(joinTable.joinColumns()[0].name()).isEqualTo("author_id");
     }
 
     @Test
-    void testLinkTableHasCorrectForeignKeyColumnNameToBook() throws NoSuchFieldException {
+    @Order(17)
+    @DisplayName("Link table has a correct foreign column name to book column")
+    void linkTableHasCorrectForeignKeyColumnNameToBook() throws NoSuchFieldException {
         Field booksField = Author.class.getDeclaredField("books");
         JoinTable joinTable = booksField.getAnnotation(JoinTable.class);
 
-        assertThat(joinTable.inverseJoinColumns()[0].name(), equalTo("book_id"));
+        assertThat(joinTable.inverseJoinColumns()[0].name()).isEqualTo("book_id");
     }
 
     @Test
-    void testBookIsbnIsNaturalKey() {
+    @Order(18)
+    @DisplayName("Book ISBN id a natural key")
+    void bookIsbnIsNaturalKey() {
         Book book = createRandomBook();
         emUtil.performWithinTx(entityManager -> entityManager.persist(book));
 
@@ -290,6 +289,20 @@ class AuthorBookMappingTest {
                     .load(book.getIsbn());
         });
 
-        assertThat(foundBook, equalTo(book));
+        assertThat(foundBook).isEqualTo(book);
+    }
+
+    private Book createRandomBook() {
+        Book book = new Book();
+        book.setName(RandomStringUtils.randomAlphabetic(20));
+        book.setIsbn(RandomStringUtils.randomAlphabetic(30));
+        return book;
+    }
+
+    private Author createRandomAuthor() {
+        Author author = new Author();
+        author.setFirstName(RandomStringUtils.randomAlphabetic(20));
+        author.setLastName(RandomStringUtils.randomAlphabetic(20));
+        return author;
     }
 }
