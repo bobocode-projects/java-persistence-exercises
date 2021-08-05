@@ -52,7 +52,7 @@ class CompanyProductMappingTest {
 
     @Test
     @Order(2)
-    @DisplayName("Save a company without a name")
+    @DisplayName("Saving a company throws an exception when the name is null")
     void saveCompanyWithNullName() {
         var company = new Company();
 
@@ -84,7 +84,7 @@ class CompanyProductMappingTest {
 
     @Test
     @Order(5)
-    @DisplayName("Save a product without a name")
+    @DisplayName("Saving a product throws an exception when the name is null")
     void saveProductWithNullName() {
         var product = new Product();
 
@@ -95,7 +95,7 @@ class CompanyProductMappingTest {
 
     @Test
     @Order(6)
-    @DisplayName("Save product and company")
+    @DisplayName("Save both a product and a company")
     void saveProductAndCompany() {
         var company = createRandomCompany();
         var product = createRandomProduct();
@@ -167,7 +167,7 @@ class CompanyProductMappingTest {
 
     @Test
     @Order(9)
-    @DisplayName("Company to products is lazy")
+    @DisplayName("Field \"products\" is lazy in Company entity")
     void companyToProductsIsLazy() {
         var company = createRandomCompany();
         emUtil.performWithinTx(entityManager -> entityManager.persist(company));
@@ -186,7 +186,7 @@ class CompanyProductMappingTest {
 
     @Test
     @Order(10)
-    @DisplayName("Product to company is lazy")
+    @DisplayName("Field \"company\" is lazy in Product entity")
     void productsToCompanyIsLazy() {
         var company = createRandomCompany();
         emUtil.performWithinTx(entityManager -> entityManager.persist(company));
@@ -205,7 +205,7 @@ class CompanyProductMappingTest {
 
     @Test
     @Order(11)
-    @DisplayName("findById() fetches products")
+    @DisplayName("findByIdFetchProducts() loads company and products all together")
     void findByIdFetchesProducts() {
         var company = createRandomCompany();
         emUtil.performWithinTx(entityManager -> entityManager.persist(company));
@@ -223,7 +223,7 @@ class CompanyProductMappingTest {
 
     @Test
     @Order(12)
-    @DisplayName("setProducts() in Company is private")
+    @DisplayName("Setter for field \"products\" is private in Company entity")
     void companySetProductsIsPrivate() throws NoSuchMethodException {
         assertThat(Company.class.getDeclaredMethod("setProducts", List.class).getModifiers()).isEqualTo(Modifier.PRIVATE);
     }

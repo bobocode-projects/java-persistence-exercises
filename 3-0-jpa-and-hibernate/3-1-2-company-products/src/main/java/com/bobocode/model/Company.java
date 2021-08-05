@@ -1,5 +1,6 @@
 package com.bobocode.model;
 
+import com.bobocode.util.ExerciseNotCompletedException;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -34,6 +35,6 @@ public class Company {
     }
 
     public void removeProduct(Product product) {
-        throw new UnsupportedOperationException("I'm still not implemented!");
+        throw new ExerciseNotCompletedException();
     }
 }
