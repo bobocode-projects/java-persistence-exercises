@@ -48,7 +48,7 @@ class AuthorBookMappingTest {
 
     @Test
     @Order(2)
-    @DisplayName("Save book without a name")
+    @DisplayName("Saving a book throws an exception when the name is null")
     void saveBookWithoutName() {
         Book book = createRandomBook();
         book.setName(null);
@@ -59,7 +59,7 @@ class AuthorBookMappingTest {
 
     @Test
     @Order(3)
-    @DisplayName("Save a Book with duplicated ISBN")
+    @DisplayName("Saving a book throws an expectation when the ISBN is duplicated")
     void saveBookWithDuplicateIsbn() {
         Book book = createRandomBook();
         emUtil.performWithinTx(entityManager -> entityManager.persist(book));
@@ -83,7 +83,7 @@ class AuthorBookMappingTest {
 
     @Test
     @Order(5)
-    @DisplayName("Save an author without a name")
+    @DisplayName("Saving an author throws an expectation when the first name is null")
     void saveAuthorWithoutFirstName() {
         Author authorWithNullFirstName = createRandomAuthor();
         authorWithNullFirstName.setFirstName(null);
@@ -94,7 +94,7 @@ class AuthorBookMappingTest {
 
     @Test
     @Order(6)
-    @DisplayName("Save an author without a name")
+    @DisplayName("Saving an author throws an expectation when the last name is null")
     void saveAuthorWithoutLastName() {
         Author authorWithNullLastName = createRandomAuthor();
         authorWithNullLastName.setLastName(null);
@@ -105,7 +105,7 @@ class AuthorBookMappingTest {
 
     @Test
     @Order(7)
-    @DisplayName("Add a new book for an existing author")
+    @DisplayName("addBook() stores new book records when the author is stored")
     void addNewBookForExistingAuthor() {
         Author author = createRandomAuthor();
         emUtil.performWithinTx(entityManager -> entityManager.persist(author));
@@ -147,7 +147,7 @@ class AuthorBookMappingTest {
 
     @Test
     @Order(9)
-    @DisplayName("Save a new author with couple new books")
+    @DisplayName("Save a new author with several new books")
     void saveNewAuthorWithCoupleNewBooks() {
         Author author = createRandomAuthor();
         List<Book> bookList = Stream.generate(this::createRandomBook).limit(3).collect(Collectors.toList());
@@ -234,14 +234,14 @@ class AuthorBookMappingTest {
 
     @Test
     @Order(13)
-    @DisplayName("Authors to book setter method is private")
+    @DisplayName("Setter for field \"author\" is private in Book entity")
     void bookSetAuthorsIsPrivate() throws NoSuchMethodException {
         assertThat(Book.class.getDeclaredMethod("setAuthors", Set.class).getModifiers()).isEqualTo(Modifier.PRIVATE);
     }
 
     @Test
     @Order(14)
-    @DisplayName("Books to authors setter method is private")
+    @DisplayName("Setter for field \"books\" is private in Author entity")
     void authorSetBooksIsPrivate() throws NoSuchMethodException {
         assertThat(Author.class.getDeclaredMethod("setBooks", Set.class).getModifiers()).isEqualTo(Modifier.PRIVATE);
     }
@@ -278,7 +278,7 @@ class AuthorBookMappingTest {
 
     @Test
     @Order(18)
-    @DisplayName("Book ISBN id a natural key")
+    @DisplayName("Book ISBN is a natural key")
     void bookIsbnIsNaturalKey() {
         Book book = createRandomBook();
         emUtil.performWithinTx(entityManager -> entityManager.persist(book));
