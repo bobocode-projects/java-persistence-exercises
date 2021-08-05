@@ -32,7 +32,7 @@ class EmployeeProfileMappingTest {
 
     @Test
     @Order(1)
-    @DisplayName("The employee table has correct name")
+    @DisplayName("The employee table has a correct name")
     void employeeTableHasCorrectName() {
         Table table = Employee.class.getAnnotation(Table.class);
         String tableName = table.name();
@@ -53,7 +53,7 @@ class EmployeeProfileMappingTest {
 
     @Test
     @Order(3)
-    @DisplayName("Save an employee without email")
+    @DisplayName("Saving an employee throws an exception when the email is null")
     void saveEmployeeWithoutEmail() {
         Employee employee = createRandomEmployee();
         employee.setEmail(null);
@@ -64,7 +64,7 @@ class EmployeeProfileMappingTest {
 
     @Test
     @Order(4)
-    @DisplayName("Save an employee without first name")
+    @DisplayName("Saving an employee throws an exception when the first name is null")
     void saveEmployeeWithoutFirstName() {
         Employee employee = createRandomEmployee();
         employee.setFistName(null);
@@ -75,7 +75,7 @@ class EmployeeProfileMappingTest {
 
     @Test
     @Order(5)
-    @DisplayName("Save an employee without last name")
+    @DisplayName("Saving an employee throws an exception when the last name is null")
     void testSaveEmployeeWithoutLastName() {
         Employee employee = createRandomEmployee();
         employee.setLastName(null);
@@ -86,7 +86,7 @@ class EmployeeProfileMappingTest {
 
     @Test
     @Order(6)
-    @DisplayName("The employee profile table has correct name")
+    @DisplayName("The employee profile table has a correct name")
     void employeeProfileTableHasCorrectName() {
         Table table = EmployeeProfile.class.getAnnotation(Table.class);
         String tableName = table.name();
@@ -96,7 +96,7 @@ class EmployeeProfileMappingTest {
 
     @Test
     @Order(7)
-    @DisplayName("Save only a profile of employee")
+    @DisplayName("Save only an employee profile")
     void saveEmployeeProfileOnly() {
         EmployeeProfile employeeProfile = createRandomEmployeeProfile();
         employeeProfile.setId(666L);
@@ -156,7 +156,7 @@ class EmployeeProfileMappingTest {
 
     @Test
     @Order(11)
-    @DisplayName("Add employee profile without position")
+    @DisplayName("Adding an employee profile throws an exception when the position is null")
     void addEmployeeWithoutPosition() {
         Employee employee = createRandomEmployee();
         emUtil.performWithinTx(entityManager -> entityManager.persist(employee));
@@ -175,7 +175,7 @@ class EmployeeProfileMappingTest {
 
     @Test
     @Order(12)
-    @DisplayName("Add employee profile without department")
+    @DisplayName("Adding an employee profile throws an exception when the department is null")
     void addEmployeeWithoutDepartment() {
         Employee employee = createRandomEmployee();
         emUtil.performWithinTx(entityManager -> entityManager.persist(employee));
