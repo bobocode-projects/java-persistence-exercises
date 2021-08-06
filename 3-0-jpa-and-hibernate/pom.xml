@@ -16,6 +16,7 @@
         <module>3-0-0-hello-jpa-entity</module>
         <module>3-0-1-hello-persistence-xml</module>
         <module>3-0-2-query-helper</module>
+        <module>3-0-3-account-dao</module>
     </modules>
 
     <dependencies>
