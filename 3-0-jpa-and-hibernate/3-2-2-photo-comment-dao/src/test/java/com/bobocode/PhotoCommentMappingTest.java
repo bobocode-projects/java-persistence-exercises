@@ -44,7 +44,7 @@ public class PhotoCommentMappingTest {
 
     @Test
     @Order(2)
-    @DisplayName("Comments setter in Photo is private")
+    @DisplayName("Setter for field \"comments\" is private in Photo entity")
     public void commentsSetterIsPrivate() throws NoSuchMethodException {
         Method setComments = Photo.class.getDeclaredMethod("setComments", List.class);
 
@@ -151,7 +151,6 @@ public class PhotoCommentMappingTest {
 
         assertThat(manyToOne.optional()).isFalse();
     }
-
 
     @Test
     @Order(13)
