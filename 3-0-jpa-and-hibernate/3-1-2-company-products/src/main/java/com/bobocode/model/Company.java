@@ -31,7 +31,7 @@ public class Company {
     private List<Product> products = new ArrayList<>();
 
     public void addProduct(Product product) {
-        throw new UnsupportedOperationException("I'm still not implemented!");
+        throw new ExerciseNotCompletedException();
     }
 
     public void removeProduct(Product product) {
