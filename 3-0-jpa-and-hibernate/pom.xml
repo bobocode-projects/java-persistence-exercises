@@ -17,18 +17,19 @@
         <module>3-0-1-hello-persistence-xml</module>
         <module>3-0-2-query-helper</module>
         <module>3-0-3-account-dao</module>
+        <module>3-1-1-employee-profile</module>
     </modules>
 
     <dependencies>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.2.5</version>
+            <version>42.2.23</version>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <version>1.4.199</version>
+            <version>1.4.200</version>
         </dependency>
         <dependency>
             <groupId>org.hibernate.javax.persistence</groupId>
@@ -38,14 +39,14 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-core</artifactId>
-            <version>5.4.3.Final</version>
+            <version>5.5.4.Final</version>
         </dependency>
 
         <!--Since JAXB APIs is no longer in default classpath in JDK 1.9 -->
         <dependency>
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
-            <version>2.2.11</version>
+            <version>2.3.1</version>
         </dependency>
 
         <dependency>
