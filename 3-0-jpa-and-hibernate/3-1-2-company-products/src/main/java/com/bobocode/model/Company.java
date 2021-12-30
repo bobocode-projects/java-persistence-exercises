@@ -20,6 +20,7 @@ import java.util.List;
  * - configure mandatory column "name" for field {@link Company#name}
  * <p>
  * - configure one to many relationship as mapped on the child side
+ * - override equals() and hashCode() considering entity id
  */
 @NoArgsConstructor
 @Getter
