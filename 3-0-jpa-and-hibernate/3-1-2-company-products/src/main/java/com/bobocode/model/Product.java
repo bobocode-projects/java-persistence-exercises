@@ -13,6 +13,7 @@ import lombok.Setter;
  * <p>
  * - configure lazy many-to-one relation between {@link Product} and {@link Company}
  * - configure foreign key column "company_id" references company table
+ * - override equals() and hashCode() considering entity id
  */
 @NoArgsConstructor
 @Getter
