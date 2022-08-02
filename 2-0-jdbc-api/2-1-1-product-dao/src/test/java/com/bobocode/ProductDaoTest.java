@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.doThrow;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class ProductDaoTest {
+ class ProductDaoTest {
     private static ProductDao productDao;
     private static DataSource dataSource;
 
