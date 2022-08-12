@@ -21,6 +21,7 @@
         <module>3-0-jpa-and-hibernate</module>
         <module>4-0-spring-data-jpa</module>
         <module>java-persistence-util</module>
+        <module>lesson-demo</module>
     </modules>
 
     <dependencies>
