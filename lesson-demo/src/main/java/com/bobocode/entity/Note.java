@@ -6,19 +6,19 @@ import com.bobocode.annotation.Id;
 import com.bobocode.annotation.Table;
 import lombok.Data;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-@Table("products")
-public class Product {
+@Table("notes")
+public class Note {
     @Id
-    private Long id;
-    
-    private String name;
-    
-    private BigDecimal price;
-    
+    private Integer id;
+
+    private String body;
+
+    @Column("person_id")
+    private Integer personId;
+
     @Column("created_at")
     private LocalDateTime createdAt;
 }
