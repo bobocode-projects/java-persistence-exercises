@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.function.Function;
 
 /**
- * {@link QueryHelper} provides a util method that allows to perform read operations in the scope of transaction
+ * {@link QueryHelper} provides an util method that allows to perform read operations in the scope of transaction
  */
 public class QueryHelper {
     private EntityManagerFactory entityManagerFactory;

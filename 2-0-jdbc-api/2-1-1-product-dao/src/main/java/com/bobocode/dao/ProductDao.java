@@ -6,7 +6,7 @@ import com.bobocode.model.Product;
 import java.util.List;
 
 /**
- * {@link ProductDao} is an Data Access Object pattern (DAO) that encapsulates all database access and manipulation logic.
+ * {@link ProductDao} is a Data Access Object pattern (DAO) that encapsulates all database access and manipulation logic.
  * It provides a convenient API that allow to store, access, update and remove data working with object OO style.
  */
 public interface ProductDao {
