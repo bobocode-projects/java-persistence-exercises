@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 /**
- * {@link WallStreetDbInitializer} is an API that has only one method. It allow to create a database tables to store
+ * {@link WallStreetDbInitializer} is an API that has only one method. It allows to create a database tables to store
  * information about brokers and its sales groups.
  */
 public class WallStreetDbInitializer {

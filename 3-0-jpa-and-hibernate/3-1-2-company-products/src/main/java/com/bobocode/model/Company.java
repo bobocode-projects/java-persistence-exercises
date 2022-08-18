@@ -19,7 +19,7 @@ import java.util.List;
  * - configure auto generated identifier
  * - configure mandatory column "name" for field {@link Company#name}
  * <p>
- * - configure one to many relationship as mapped on the child side
+ * - configure one-to-many relationship as mapped on the child side
  */
 @NoArgsConstructor
 @Getter
