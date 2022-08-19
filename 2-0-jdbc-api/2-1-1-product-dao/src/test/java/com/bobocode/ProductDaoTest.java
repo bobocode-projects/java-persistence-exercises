@@ -1,54 +1,62 @@
 package com.bobocode;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
+import static org.mockito.Mockito.doThrow;
+
 import com.bobocode.dao.ProductDao;
 import com.bobocode.dao.ProductDaoImpl;
 import com.bobocode.exception.DaoOperationException;
 import com.bobocode.model.Product;
 import com.bobocode.util.JdbcUtil;
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.Month;
+import java.util.List;
+import java.util.Objects;
+import javax.sql.DataSource;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
-import org.h2.jdbcx.JdbcDataSource;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.mockito.Mockito;
 
-import javax.sql.DataSource;
-import java.math.BigDecimal;
-import java.sql.*;
-import java.time.LocalDate;
-import java.time.Month;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.doThrow;
-
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class ProductDaoTest {
+class ProductDaoTest extends AbstractDaoTest {
+
     private static ProductDao productDao;
     private static DataSource spyDataSource;
     private static DataSource originalDataSource;
 
     @BeforeAll
+    @SneakyThrows
     static void init() {
-        originalDataSource = initializeDataSource();
+        originalDataSource = JdbcUtil.createDefaultInMemoryH2DataSource();
         spyDataSource = Mockito.spy(originalDataSource);
         productDao = new ProductDaoImpl(spyDataSource);
+        createTable(originalDataSource);
     }
 
-    @AfterEach
     @SneakyThrows
-    void clearDb() {
+    @AfterEach
+    void reset() {
         try (var connection = originalDataSource.getConnection()) {
             try (var statement = connection.createStatement()) {
-                statement.executeUpdate("delete from products;");
+                statement.executeUpdate("TRUNCATE TABLE products;");
             }
         }
+        Mockito.reset(spyDataSource);
     }
 
     @Test
@@ -77,9 +85,10 @@ class ProductDaoTest {
 
     @Test
     @Order(3)
-    @DisplayName("save throws an exception when product is not invalid")
+    @DisplayName("save throws an exception when product is not valid")
     void saveThrowsException() {
-        Product invalidTestProduct = createInvalidTestProduct();
+        Product invalidTestProduct = createTestProduct();
+        invalidTestProduct.setProducer(null);//setting null to mandatory field to make the product entity invalid
 
         assertThatExceptionOfType(DaoOperationException.class)
                 .isThrownBy(() -> productDao.save(invalidTestProduct))
@@ -91,7 +100,7 @@ class ProductDaoTest {
     @DisplayName("save wraps DB errors with a custom exception")
     @SneakyThrows
     void saveWrapsSqlException() {
-        givenDatabaseError();
+        mockDataSourceToThrowError();
         assertThatExceptionOfType(DaoOperationException.class)
                 .isThrownBy(() -> productDao.save(new Product()));
     }
@@ -100,7 +109,7 @@ class ProductDaoTest {
     @Order(5)
     @DisplayName("findAll loads all products from the DB")
     void findAll() {
-        List<Product> products = givenStoredProducts();
+        List<Product> products = givenStoredProductsFromDB();
 
         List<Product> foundProducts = productDao.findAll();
 
@@ -112,7 +121,7 @@ class ProductDaoTest {
     @Order(6)
     @DisplayName("findAll wraps DB errors with a custom exception")
     void findAllWrapsSqlExceptions() {
-        givenDatabaseError();
+        mockDataSourceToThrowError();
         assertThatExceptionOfType(DaoOperationException.class).isThrownBy(() -> productDao.findAll());
     }
 
@@ -139,8 +148,7 @@ class ProductDaoTest {
         long productId = 666L;
 
         assertThatExceptionOfType(DaoOperationException.class)
-                .isThrownBy(() -> productDao.findOne(productId))
-                .withMessage(String.format("Product with id = %d does not exist", productId));
+                .isThrownBy(() -> productDao.findOne(productId));
     }
 
     @Test
@@ -148,7 +156,7 @@ class ProductDaoTest {
     @DisplayName("findOne wraps DB errors with a custom exception")
     @SneakyThrows
     void findOneWrapsSqlExceptions() {
-        givenDatabaseError();
+        mockDataSourceToThrowError();
         assertThatExceptionOfType(DaoOperationException.class)
                 .isThrownBy(() -> productDao.findOne(1L));
     }
@@ -160,6 +168,7 @@ class ProductDaoTest {
         Product testProduct = generateTestProduct();
         saveToDB(testProduct);
         List<Product> productsBeforeUpdate = findAllFromDataBase();
+
         testProduct.setName("Updated name");
         testProduct.setProducer("Updated producer");
         testProduct.setPrice(BigDecimal.valueOf(666));
@@ -169,7 +178,7 @@ class ProductDaoTest {
         List<Product> products = findAllFromDataBase();
         Product updatedProduct = findOneFromDatabase(testProduct.getId());
 
-        assertThat(productsBeforeUpdate.size()).isEqualTo(products.size());
+        assertThat(productsBeforeUpdate).hasSameSizeAs(products);
         RecursiveComparisonConfiguration recursiveComparisonConfiguration = new RecursiveComparisonConfiguration();
         recursiveComparisonConfiguration.setIgnoreAllActualNullFields(true);
         assertThat(testProduct).usingRecursiveComparison(recursiveComparisonConfiguration).isEqualTo(updatedProduct);
@@ -185,8 +194,7 @@ class ProductDaoTest {
         Product notStoredProduct = generateTestProduct();
 
         assertThatExceptionOfType(DaoOperationException.class)
-                .isThrownBy(() -> productDao.update(notStoredProduct))
-                .withMessage("Product id cannot be null");
+                .isThrownBy(() -> productDao.update(notStoredProduct));
     }
 
     @Test
@@ -194,7 +202,7 @@ class ProductDaoTest {
     @DisplayName("update wraps DB errors with a custom exception")
     @SneakyThrows
     void updateWrapsSqlExceptions() {
-        givenDatabaseError();
+        mockDataSourceToThrowError();
         assertThatExceptionOfType(DaoOperationException.class)
                 .isThrownBy(() -> productDao.update(new Product()));
     }
@@ -203,18 +211,12 @@ class ProductDaoTest {
     @Order(13)
     @DisplayName("remove deletes the product by id from the DB")
     void remove() {
-        var product = givenStoredProduct();
+        var product = givenStoredProductFromDB();
 
         productDao.remove(product);
         List<Product> allProducts = findAllFromDataBase();
 
         assertThat(allProducts).doesNotContain(product);
-    }
-    
-    private Product givenStoredProduct(){
-        Product product = generateTestProduct();
-        saveToDB(product);
-        return product;
     }
 
     @Test
@@ -224,8 +226,7 @@ class ProductDaoTest {
         Product notStoredProduct = generateTestProduct();
 
         assertThatExceptionOfType(DaoOperationException.class)
-                .isThrownBy(() -> productDao.remove(notStoredProduct))
-                .withMessage("Product id cannot be null");
+                .isThrownBy(() -> productDao.remove(notStoredProduct));
     }
 
     @Test
@@ -233,16 +234,15 @@ class ProductDaoTest {
     @DisplayName("remove wraps DB errors with a custom exception")
     @SneakyThrows
     void removeWrapsSqlExceptions() {
-        givenDatabaseError();
+        mockDataSourceToThrowError();
         assertThatExceptionOfType(DaoOperationException.class)
                 .isThrownBy(() -> productDao.remove(new Product()));
     }
 
-    private static DataSource initializeDataSource() {
-        var dataSource = new JdbcDataSource();
-        dataSource.setUrl("jdbc:h2:mem:demo;INIT=runscript from 'classpath:db/init.sql'");
-        dataSource.setUser("sa");
-        return dataSource;
+    private Product givenStoredProductFromDB() {
+        Product product = generateTestProduct();
+        saveToDB(product);
+        return product;
     }
 
     private Product generateTestProduct() {
@@ -257,135 +257,24 @@ class ProductDaoTest {
                 .build();
     }
 
-    private List<Product> givenStoredProducts() {
+    private void mockDataSourceToThrowError() throws SQLException {
+        doThrow(new SQLException("Mock testing Exception")).when(spyDataSource).getConnection();
+    }
+
+    private List<Product> givenStoredProductsFromDB() {
         List<Product> products = createTestProductList();
         products.forEach(this::saveToDB);
         return products;
     }
 
-    private void givenDatabaseError() throws SQLException {
-        doThrow(new SQLException("Mock testing Exception")).when(spyDataSource).getConnection();
-    }
-
     private List<Product> findAllFromDataBase() {
         try (Connection connection = originalDataSource.getConnection()) {
-            return findAllProducts(connection);
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM products;");
+            return collectToList(resultSet);
         } catch (SQLException e) {
             throw new DaoOperationException("Error finding all products", e);
         }
-    }
-
-    private List<Product> findAllProducts(Connection connection) throws SQLException {
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery("SELECT * FROM products;");
-        return collectToList(resultSet);
-    }
-
-    private List<Product> collectToList(ResultSet resultSet) throws SQLException {
-        List<Product> products = new ArrayList<>();
-        while (resultSet.next()) {
-            Product product = parseRow(resultSet);
-            products.add(product);
-        }
-        return products;
-    }
-
-    private Product parseRow(ResultSet resultSet) {
-        try {
-            return createFromResultSet(resultSet);
-        } catch (SQLException e) {
-            throw new DaoOperationException("Cannot parse row to create product instance", e);
-        }
-    }
-
-    private Product createFromResultSet(ResultSet resultSet) throws SQLException {
-        Product product = new Product();
-        product.setId(resultSet.getLong("id"));
-        product.setName(resultSet.getString("name"));
-        product.setProducer(resultSet.getString("producer"));
-        product.setPrice(resultSet.getBigDecimal("price").stripTrailingZeros());
-        product.setExpirationDate(resultSet.getDate("expiration_date").toLocalDate());
-        product.setCreationTime(resultSet.getTimestamp("creation_time").toLocalDateTime());
-        return product;
-    }
-
-    private Product createTestProduct() {
-        return Product.builder()
-                .name("Fanta")
-                .producer("The Coca-Cola Company")
-                .price(BigDecimal.valueOf(22))
-                .expirationDate(LocalDate.of(2020, Month.APRIL, 14)).build();
-    }
-
-    private Product createInvalidTestProduct() {
-        return Product.builder()
-                .name("INVALID")
-                .price(BigDecimal.valueOf(22))
-                .expirationDate(LocalDate.of(2020, Month.APRIL, 14)).build();
-    }
-
-    private void saveToDB(Product product) {
-        Objects.requireNonNull(product);
-        try (Connection connection = originalDataSource.getConnection()) {
-            saveProduct(product, connection);
-        } catch (SQLException e) {
-            throw new DaoOperationException(String.format("Error saving product: %s " + e.getMessage(), product), e);
-        }
-    }
-
-    private void saveProduct(Product product, Connection connection) throws SQLException {
-        PreparedStatement insertStatement = prepareInsertStatement(product, connection);
-        insertStatement.executeUpdate();
-        Long id = fetchGeneratedId(insertStatement);
-        product.setId(id);
-    }
-
-    private PreparedStatement prepareInsertStatement(Product product, Connection connection) {
-        try {
-            PreparedStatement insertStatement = connection
-                    .prepareStatement("INSERT INTO products(name, producer, price, expiration_date) VALUES (?, ?, ?, ?);",
-                            PreparedStatement.RETURN_GENERATED_KEYS);
-            fillProductStatement(product, insertStatement);
-            return insertStatement;
-        } catch (SQLException e) {
-            throw new DaoOperationException(String.format("Cannot prepare statement for product: %s", product), e);
-        }
-    }
-
-    private void fillProductStatement(Product product, PreparedStatement updateStatement) throws SQLException {
-        updateStatement.setString(1, product.getName());
-        updateStatement.setString(2, product.getProducer());
-        updateStatement.setBigDecimal(3, product.getPrice());
-        updateStatement.setDate(4, Date.valueOf(product.getExpirationDate()));
-    }
-
-    private Long fetchGeneratedId(PreparedStatement insertStatement) throws SQLException {
-        ResultSet generatedKeys = insertStatement.getGeneratedKeys();
-        if (generatedKeys.next()) {
-            return generatedKeys.getLong(1);
-        } else {
-            throw new DaoOperationException("Can not obtain product ID");
-        }
-    }
-
-    private List<Product> createTestProductList() {
-        return List.of(
-                Product.builder()
-                        .name("Sprite")
-                        .producer("The Coca-Cola Company")
-                        .price(BigDecimal.valueOf(18))
-                        .expirationDate(LocalDate.of(2020, Month.MARCH, 24)).build(),
-                Product.builder()
-                        .name("Cola light")
-                        .producer("The Coca-Cola Company")
-                        .price(BigDecimal.valueOf(21))
-                        .expirationDate(LocalDate.of(2020, Month.JANUARY, 11)).build(),
-                Product.builder()
-                        .name("Snickers")
-                        .producer("Mars Inc.")
-                        .price(BigDecimal.valueOf(16))
-                        .expirationDate(LocalDate.of(2019, Month.DECEMBER, 3)).build()
-        );
     }
 
     private Product findOneFromDatabase(Long id) {
@@ -397,24 +286,20 @@ class ProductDaoTest {
         }
     }
 
-    private Product findProductById(Long id, Connection connection) throws SQLException {
-        PreparedStatement selectByIdStatement = prepareSelectByIdStatement(id, connection);
-        ResultSet resultSet = selectByIdStatement.executeQuery();
-        if (resultSet.next()) {
-            return parseRow(resultSet);
-        } else {
-            throw new DaoOperationException(String.format("Product with id = %d does not exist", id));
-        }
+    private Product createTestProduct() {
+        return Product.builder()
+                .name("Fanta")
+                .producer("The Coca-Cola Company")
+                .price(BigDecimal.valueOf(22))
+                .expirationDate(LocalDate.of(2020, Month.APRIL, 14)).build();
     }
 
-    private PreparedStatement prepareSelectByIdStatement(Long id, Connection connection) {
-        try {
-            PreparedStatement selectByIdStatement = connection
-                    .prepareStatement("SELECT * FROM products WHERE id = ?;");
-            selectByIdStatement.setLong(1, id);
-            return selectByIdStatement;
+    private void saveToDB(Product product) {
+        Objects.requireNonNull(product);
+        try (Connection connection = originalDataSource.getConnection()) {
+            saveProduct(product, connection);
         } catch (SQLException e) {
-            throw new DaoOperationException(String.format("Cannot prepare select by id statement for id = %d", id), e);
+            throw new DaoOperationException(String.format("Error saving product: %s " + e.getMessage(), product), e);
         }
     }
 }

@@ -2,12 +2,12 @@ package com.bobocode.dao;
 
 import com.bobocode.model.Product;
 import com.bobocode.util.ExerciseNotCompletedException;
-
-import javax.sql.DataSource;
 import java.util.List;
+import javax.sql.DataSource;
 
 public class ProductDaoImpl implements ProductDao {
-    private DataSource dataSource;
+
+    private final DataSource dataSource;
 
     public ProductDaoImpl(DataSource dataSource) {
         this.dataSource = dataSource;
