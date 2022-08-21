@@ -1,9 +1,10 @@
 package com.bobocode;
 
+import com.bobocode.pool.PooledDataSource;
 import lombok.SneakyThrows;
-import org.postgresql.ds.PGSimpleDataSource;
 
 import javax.sql.DataSource;
+import java.sql.SQLException;
 
 public class DemoApp {
     @SneakyThrows
@@ -24,23 +25,11 @@ public class DemoApp {
         }
         System.out.println((System.nanoTime() - start) / 1000_000 + " ms");
         System.out.println(total);
-
-
     }
 
-    private static DataSource initializeDataSource() {
-        PGSimpleDataSource dataSource = new PGSimpleDataSource();
-        dataSource.setURL("jdbc:postgresql://localhost:5432/postgres");
-        dataSource.setUser("ju22user");
-        dataSource.setPassword("ju22pass");
-        return dataSource;
-    }
-
-    private static DataSource initializePooledDataSource() {
-        PGSimpleDataSource dataSource = new PGSimpleDataSource();
-        dataSource.setURL("jdbc:postgresql://localhost:5432/postgres");
-        dataSource.setUser("ju22user");
-        dataSource.setPassword("ju22pass");
-        return dataSource;
+    private static DataSource initializePooledDataSource() throws SQLException, InterruptedException {
+        return new PooledDataSource("jdbc:postgresql://localhost:5432/postgres",
+                "postgres",
+                "root");
     }
 }
