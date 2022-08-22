@@ -1,28 +1,44 @@
 package com.bobocode;
 
-import com.bobocode.model.Photo;
-import com.bobocode.model.PhotoComment;
-import com.bobocode.util.EntityManagerUtil;
-import org.junit.jupiter.api.*;
-
-import javax.persistence.*;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.List;
-
-import static com.bobocode.util.PhotoTestDataGenerator.*;
+import static com.bobocode.util.PhotoTestDataGenerator.createListOfRandomComments;
+import static com.bobocode.util.PhotoTestDataGenerator.createRandomPhoto;
+import static com.bobocode.util.PhotoTestDataGenerator.createRandomPhotoComment;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
+import com.bobocode.model.Photo;
+import com.bobocode.model.PhotoComment;
+import com.bobocode.util.EntityManagerUtil;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.List;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Persistence;
+import javax.persistence.PersistenceException;
+import javax.persistence.Table;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class PhotoCommentMappingTest {
+class PhotoCommentMappingTest {
+
     private static EntityManagerUtil emUtil;
     private static EntityManagerFactory entityManagerFactory;
 
     @BeforeAll
-    public static void setup() {
+    static void setup() {
         entityManagerFactory = Persistence.createEntityManagerFactory("PhotoComments");
         emUtil = new EntityManagerUtil(entityManagerFactory);
     }
@@ -35,7 +51,7 @@ public class PhotoCommentMappingTest {
     @Test
     @Order(1)
     @DisplayName("Comments list is initialized")
-    public void commentsListIsInitialized() {
+    void commentsListIsInitialized() {
         Photo photo = new Photo();
         List<PhotoComment> comments = photo.getComments();
 
@@ -45,7 +61,7 @@ public class PhotoCommentMappingTest {
     @Test
     @Order(2)
     @DisplayName("Setter for field \"comments\" is private in Photo entity")
-    public void commentsSetterIsPrivate() throws NoSuchMethodException {
+    void commentsSetterIsPrivate() throws NoSuchMethodException {
         Method setComments = Photo.class.getDeclaredMethod("setComments", List.class);
 
         assertThat(setComments.getModifiers()).isEqualTo(Modifier.PRIVATE);
@@ -54,7 +70,7 @@ public class PhotoCommentMappingTest {
     @Test
     @Order(3)
     @DisplayName("Photo table name is specified")
-    public void photoTableNameIsSpecified() {
+    void photoTableNameIsSpecified() {
         Table table = Photo.class.getAnnotation(Table.class);
         String tableName = table.name();
 
@@ -64,7 +80,7 @@ public class PhotoCommentMappingTest {
     @Test
     @Order(4)
     @DisplayName("Photo comment table name is specified")
-    public void photoCommentTableNameIsSpecified() {
+    void photoCommentTableNameIsSpecified() {
         Table table = PhotoComment.class.getAnnotation(Table.class);
 
         assertThat(table.name()).isEqualTo("photo_comment");
@@ -73,7 +89,7 @@ public class PhotoCommentMappingTest {
     @Test
     @Order(5)
     @DisplayName("Photo URL is not null and unique")
-    public void photoUrlIsNotNullAndUnique() throws NoSuchFieldException {
+    void photoUrlIsNotNullAndUnique() throws NoSuchFieldException {
         Field url = Photo.class.getDeclaredField("url");
         Column column = url.getAnnotation(Column.class);
 
@@ -84,7 +100,7 @@ public class PhotoCommentMappingTest {
     @Test
     @Order(6)
     @DisplayName("Photo comment text is mandatory")
-    public void photoCommentTextIsMandatory() throws NoSuchFieldException {
+    void photoCommentTextIsMandatory() throws NoSuchFieldException {
         Field text = PhotoComment.class.getDeclaredField("text");
         Column column = text.getAnnotation(Column.class);
 
@@ -94,7 +110,7 @@ public class PhotoCommentMappingTest {
     @Test
     @Order(7)
     @DisplayName("Cascade type ALL is enabled for comments")
-    public void cascadeTypeAllIsEnabledForComments() throws NoSuchFieldException {
+    void cascadeTypeAllIsEnabledForComments() throws NoSuchFieldException {
         Field comments = Photo.class.getDeclaredField("comments");
         OneToMany oneToMany = comments.getAnnotation(OneToMany.class);
         CascadeType[] expectedCascade = {CascadeType.ALL};
@@ -105,7 +121,7 @@ public class PhotoCommentMappingTest {
     @Test
     @Order(8)
     @DisplayName("Orphan removal is enabled for comments")
-    public void orphanRemovalIsEnabledForComments() throws NoSuchFieldException {
+    void orphanRemovalIsEnabledForComments() throws NoSuchFieldException {
         Field comments = Photo.class.getDeclaredField("comments");
         OneToMany oneToMany = comments.getAnnotation(OneToMany.class);
 
@@ -115,7 +131,7 @@ public class PhotoCommentMappingTest {
     @Test
     @Order(9)
     @DisplayName("Foreign key column is specified")
-    public void foreignKeyColumnIsSpecified() throws NoSuchFieldException {
+    void foreignKeyColumnIsSpecified() throws NoSuchFieldException {
         Field photo = PhotoComment.class.getDeclaredField("photo");
         JoinColumn joinColumn = photo.getAnnotation(JoinColumn.class);
 
@@ -125,7 +141,7 @@ public class PhotoCommentMappingTest {
     @Test
     @Order(10)
     @DisplayName("Save a photo only")
-    public void savePhotoOnly() {
+    void savePhotoOnly() {
         Photo photo = createRandomPhoto();
         emUtil.performWithinTx(entityManager -> entityManager.persist(photo));
 
@@ -135,7 +151,7 @@ public class PhotoCommentMappingTest {
     @Test
     @Order(11)
     @DisplayName("Save a photo comment only")
-    public void savePhotoCommentOnly() {
+    void savePhotoCommentOnly() {
         PhotoComment photoComment = createRandomPhotoComment();
 
         assertThatExceptionOfType(PersistenceException.class).isThrownBy(() ->
@@ -145,7 +161,7 @@ public class PhotoCommentMappingTest {
     @Test
     @Order(12)
     @DisplayName("A comment cannot exist without a photo")
-    public void commentCannotExistsWithoutPhoto() throws NoSuchFieldException {
+    void commentCannotExistsWithoutPhoto() throws NoSuchFieldException {
         Field photo = PhotoComment.class.getDeclaredField("photo");
         ManyToOne manyToOne = photo.getAnnotation(ManyToOne.class);
 
@@ -155,7 +171,7 @@ public class PhotoCommentMappingTest {
     @Test
     @Order(13)
     @DisplayName("Save a new comment")
-    public void saveNewComment() {
+    void saveNewComment() {
         Photo photo = createRandomPhoto();
         emUtil.performWithinTx(entityManager -> entityManager.persist(photo));
 
@@ -177,7 +193,7 @@ public class PhotoCommentMappingTest {
     @Test
     @Order(14)
     @DisplayName("Add a new comment")
-    public void addNewComment() {
+    void addNewComment() {
         Photo photo = createRandomPhoto();
         emUtil.performWithinTx(entityManager -> entityManager.persist(photo));
 
@@ -201,7 +217,7 @@ public class PhotoCommentMappingTest {
     @Test
     @Order(15)
     @DisplayName("Save new comments")
-    public void saveNewComments() {
+    void saveNewComments() {
         Photo photo = createRandomPhoto();
         emUtil.performWithinTx(entityManager -> entityManager.persist(photo));
 
@@ -219,7 +235,7 @@ public class PhotoCommentMappingTest {
     @Test
     @Order(16)
     @DisplayName("Add a new comment")
-    public void addNewComments() {
+    void addNewComments() {
         Photo photo = createRandomPhoto();
         emUtil.performWithinTx(entityManager -> entityManager.persist(photo));
         List<PhotoComment> listOfComments = createListOfRandomComments(5);
@@ -238,7 +254,7 @@ public class PhotoCommentMappingTest {
     @Test
     @Order(17)
     @DisplayName("Remove a comment")
-    public void removeComment() {
+    void removeComment() {
         Photo photo = createRandomPhoto();
         PhotoComment photoComment = createRandomPhotoComment();
         List<PhotoComment> commentList = createListOfRandomComments(5);
@@ -251,7 +267,6 @@ public class PhotoCommentMappingTest {
             PhotoComment managedComment = entityManager.find(PhotoComment.class, photoComment.getId());
             managedPhoto.removeComment(managedComment);
         });
-
 
         emUtil.performWithinTx(entityManager -> {
             Photo managedPhoto = entityManager.find(Photo.class, photo.getId());

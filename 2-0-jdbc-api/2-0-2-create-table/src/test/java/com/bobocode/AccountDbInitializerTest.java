@@ -1,21 +1,26 @@
 package com.bobocode;
 
-import com.bobocode.util.JdbcUtil;
-import org.junit.jupiter.api.*;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import javax.sql.DataSource;
+import com.bobocode.util.JdbcUtil;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import javax.sql.DataSource;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class AccountDbInitializerTest {
+class AccountDbInitializerTest {
+
     private static DataSource dataSource;
 
     @BeforeAll
@@ -67,7 +72,8 @@ public class AccountDbInitializerTest {
             List<String> columns = fetchColumnsNames(resultSet);
 
             assertThat(columns.size()).isEqualTo(8);
-            assertTrue(columns.containsAll(List.of("id", "first_name", "last_name", "email", "gender", "balance", "birthday", "creation_time")));
+            assertTrue(columns.containsAll(
+                    List.of("id", "first_name", "last_name", "email", "gender", "balance", "birthday", "creation_time")));
         }
     }
 
@@ -199,7 +205,8 @@ public class AccountDbInitializerTest {
             List<String> notNullColumns = fetchColumnsNames(resultSet);
 
             assertThat(notNullColumns.size()).isEqualTo(7);
-            assertTrue(notNullColumns.containsAll(List.of("id", "first_name", "last_name", "email", "gender", "birthday", "creation_time")));
+            assertTrue(notNullColumns.containsAll(
+                    List.of("id", "first_name", "last_name", "email", "gender", "birthday", "creation_time")));
         }
     }
 

@@ -10,9 +10,8 @@ import java.util.List;
  * It provides a convenient API that allows to store, access, update and remove data working with object-oriented style.
  */
 public interface ProductDao {
-
     /**
-     * Stores a new product into the database. Sets the database-generated ID for to {@link Product} instance
+     * Stores a new product into the database. Sets the database-generated ID to {@link Product} instance
      *
      * @param product new product
      * @throws DaoOperationException in case of database errors
