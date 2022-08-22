@@ -8,8 +8,9 @@ import javax.persistence.*;
 
 /**
  * TODO: you're job is to implement mapping for JPA entity {@link Movie}
+ * - explicitly specify the table name
  * - specify id
- * - configure id as auto-increment column
+ * - configure id as auto-increment column, choose an Identity generation strategy
  * - explicitly specify each column name ("id", "name", "director", and "duration" accordingly)
  * - specify not null constraint for fields {@link Movie#name} and {@link Movie#director}
  */
