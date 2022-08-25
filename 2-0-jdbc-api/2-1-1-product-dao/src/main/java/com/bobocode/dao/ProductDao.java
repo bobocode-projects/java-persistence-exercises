@@ -7,14 +7,14 @@ import java.util.List;
 
 /**
  * {@link ProductDao} is a Data Access Object pattern (DAO) that encapsulates all database access and manipulation logic.
- * It provides a convenient API that allow to store, access, update and remove data working with object OO style.
+ * It provides a convenient API that allows to store, access, update and remove data working with object-oriented style.
  */
 public interface ProductDao {
     /**
-     * Stores a new product into the database. Sets generated id to the {@link Product} instance
+     * Stores a new product into the database. Sets the database-generated ID to {@link Product} instance
      *
      * @param product new product
-     * @throws DaoOperationException with massage: "Error saving product: {@link Product} instance"
+     * @throws DaoOperationException in case of database errors
      */
     void save(Product product);
 
@@ -22,14 +22,16 @@ public interface ProductDao {
      * Retrieves and returns all products from the database
      *
      * @return list of all products
+     * @throws DaoOperationException in case of database errors
      */
     List<Product> findAll();
 
     /**
-     * Returns a product object by its id
+     * Returns a product object by provided id
      *
      * @param id product identifier (primary key)
-     * @return one product by its id
+     * @return single product by its id
+     * @throws DaoOperationException in case of database errors
      */
     Product findOne(Long id);
 
@@ -37,6 +39,7 @@ public interface ProductDao {
      * Updates existing product.
      *
      * @param product stored product with updated fields
+     * @throws DaoOperationException in case of database errors
      */
     void update(Product product);
 
@@ -44,6 +47,7 @@ public interface ProductDao {
      * Removes an existing product from the database
      *
      * @param product stored product
+     * @throws DaoOperationException in case of database errors
      */
     void remove(Product product);
 }
