@@ -16,7 +16,7 @@ public class ProductDaoImpl implements ProductDao {
     private static final String UPDATE_BY_ID_SLQ = "UPDATE products SET name = ?, producer = ?, price = ?, expiration_date = ? WHERE id = ?;";
     private static final String REMOVE_BY_ID_SQL = "DELETE FROM products WHERE id = ?;";
 
-    private DataSource dataSource;
+    private final DataSource dataSource;
 
     public ProductDaoImpl(DataSource dataSource) {
         this.dataSource = dataSource;

@@ -13,7 +13,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class QueryHelperTest {
+class QueryHelperTest {
+
     private static EntityManagerFactory entityManagerFactory;
     private static EntityManagerUtil emUtil;
     private static QueryHelper queryHelper;
@@ -33,7 +34,7 @@ public class QueryHelperTest {
     @Test
     @Order(1)
     @DisplayName("Query helper returns a result")
-    public void queryHelperReturnsResult() {
+    void queryHelperReturnsResult() {
         Account account = saveRandomAccount();
         Long accountId = account.getId();
 
@@ -45,7 +46,7 @@ public class QueryHelperTest {
     @Test
     @Order(2)
     @DisplayName("Query helper uses \"Read Only\"")
-    public void queryHelperUsesReadOnly() {
+    void queryHelperUsesReadOnly() {
         Account account = saveRandomAccount();
         Long accountId = account.getId();
 
@@ -59,7 +60,7 @@ public class QueryHelperTest {
     @Test
     @Order(3)
     @DisplayName("Query helper throws exception")
-    public void queryHelperThrowsException() {
+    void queryHelperThrowsException() {
         Account account = TestDataGenerator.generateAccount();
         emUtil.performWithinTx(entityManager -> entityManager.persist(account));
         try {
