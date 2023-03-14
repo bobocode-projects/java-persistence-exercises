@@ -1,14 +1,18 @@
 package com.bobocode;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
-import static org.mockito.Mockito.doThrow;
-
 import com.bobocode.dao.ProductDao;
 import com.bobocode.dao.ProductDaoImpl;
 import com.bobocode.exception.DaoOperationException;
 import com.bobocode.model.Product;
 import com.bobocode.util.JdbcUtil;
+import lombok.SneakyThrows;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.RandomUtils;
+import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
+
+import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -18,21 +22,13 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.util.List;
 import java.util.Objects;
-import javax.sql.DataSource;
-import lombok.SneakyThrows;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.RandomUtils;
-import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
-import org.mockito.Mockito;
 
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
+import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import static org.mockito.Mockito.doThrow;
+
+@TestMethodOrder(OrderAnnotation.class)
 class ProductDaoTest extends AbstractDaoTest {
 
     private static ProductDao productDao;
@@ -61,52 +57,47 @@ class ProductDaoTest extends AbstractDaoTest {
 
     @Test
     @Order(1)
+    @DisplayName("save stores a product to the DB")
+    void save() {
+        var product = createTestProduct();
+
+        productDao.save(product);
+        var foundProducts = findAllFromDataBase();
+
+        assertThat(foundProducts)
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id", "creationTime")
+                .contains(product);
+    }
+
+    @Test
+    @Order(2)
     @DisplayName("save generates product id")
     void saveGeneratesId() {
         var product = createTestProduct();
         assertThat(product.getId()).isNull();
 
         productDao.save(product);
-
         assertThat(product.getId()).isNotNull();
-    }
 
-    @Test
-    @Order(2)
-    @DisplayName("save stores a product to the DB")
-    void save() {
-        var product = createTestProduct();
-
-        productDao.save(product);
-        List<Product> products = findAllFromDataBase();
-
-        assertThat(products).contains(product);
+        var foundProduct = findOneFromDatabase(product.getId());
+        assertThat(foundProduct).isEqualTo(product);
     }
 
     @Test
     @Order(3)
-    @DisplayName("save throws an exception when product is not valid")
-    void saveThrowsException() {
-        Product invalidTestProduct = createTestProduct();
-        invalidTestProduct.setProducer(null);//setting null to mandatory field to make the product entity invalid
+    @DisplayName("save wraps DB errors with a custom exception")
+    @SneakyThrows
+    void saveWrapsSqlException() {
+        var product = createTestProduct();
+        mockDataSourceToThrowError();
 
         assertThatExceptionOfType(DaoOperationException.class)
-                .isThrownBy(() -> productDao.save(invalidTestProduct))
-                .withMessage(String.format("Error saving product: %s", invalidTestProduct));
+                .isThrownBy(() -> productDao.save(product))
+                .withMessage(String.format("Error saving product: %s", product));
     }
 
     @Test
     @Order(4)
-    @DisplayName("save wraps DB errors with a custom exception")
-    @SneakyThrows
-    void saveWrapsSqlException() {
-        mockDataSourceToThrowError();
-        assertThatExceptionOfType(DaoOperationException.class)
-                .isThrownBy(() -> productDao.save(new Product()));
-    }
-
-    @Test
-    @Order(5)
     @DisplayName("findAll loads all products from the DB")
     void findAll() {
         List<Product> products = givenStoredProductsFromDB();
@@ -118,7 +109,7 @@ class ProductDaoTest extends AbstractDaoTest {
 
     @Test
     @SneakyThrows
-    @Order(6)
+    @Order(5)
     @DisplayName("findAll wraps DB errors with a custom exception")
     void findAllWrapsSqlExceptions() {
         mockDataSourceToThrowError();
@@ -126,7 +117,7 @@ class ProductDaoTest extends AbstractDaoTest {
     }
 
     @Test
-    @Order(7)
+    @Order(6)
     @DisplayName("findOne loads a product by id")
     void findById() {
         Product testProduct = generateTestProduct();
@@ -142,7 +133,7 @@ class ProductDaoTest extends AbstractDaoTest {
     }
 
     @Test
-    @Order(8)
+    @Order(7)
     @DisplayName("findOne throws an exception when the product is not found")
     void findOneThrowsExceptionWhenNotFound() {
         long productId = 666L;
@@ -152,7 +143,7 @@ class ProductDaoTest extends AbstractDaoTest {
     }
 
     @Test
-    @Order(9)
+    @Order(8)
     @DisplayName("findOne wraps DB errors with a custom exception")
     @SneakyThrows
     void findOneWrapsSqlExceptions() {
@@ -162,7 +153,7 @@ class ProductDaoTest extends AbstractDaoTest {
     }
 
     @Test
-    @Order(10)
+    @Order(9)
     @DisplayName("update changes the product in the DB")
     void update() {
         Product testProduct = generateTestProduct();
@@ -188,7 +179,7 @@ class ProductDaoTest extends AbstractDaoTest {
     }
 
     @Test
-    @Order(11)
+    @Order(10)
     @DisplayName("update throws an exception when a product ID is null")
     void updateNotStored() {
         Product notStoredProduct = generateTestProduct();
@@ -198,7 +189,7 @@ class ProductDaoTest extends AbstractDaoTest {
     }
 
     @Test
-    @Order(12)
+    @Order(11)
     @DisplayName("update wraps DB errors with a custom exception")
     @SneakyThrows
     void updateWrapsSqlExceptions() {
@@ -208,7 +199,7 @@ class ProductDaoTest extends AbstractDaoTest {
     }
 
     @Test
-    @Order(13)
+    @Order(12)
     @DisplayName("remove deletes the product by id from the DB")
     void remove() {
         var product = givenStoredProductFromDB();
@@ -220,7 +211,7 @@ class ProductDaoTest extends AbstractDaoTest {
     }
 
     @Test
-    @Order(14)
+    @Order(13)
     @DisplayName("remove throws an exception when a product ID is null")
     void removeNotStored() {
         Product notStoredProduct = generateTestProduct();
@@ -230,7 +221,7 @@ class ProductDaoTest extends AbstractDaoTest {
     }
 
     @Test
-    @Order(15)
+    @Order(14)
     @DisplayName("remove wraps DB errors with a custom exception")
     @SneakyThrows
     void removeWrapsSqlExceptions() {
