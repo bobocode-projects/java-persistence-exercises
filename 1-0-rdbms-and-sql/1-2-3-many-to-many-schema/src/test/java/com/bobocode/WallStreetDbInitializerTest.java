@@ -13,11 +13,11 @@ import java.util.List;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class WallStreetDbInitializerTest {
+class WallStreetDbInitializerTest {
     private static DataSource dataSource;
 
     @BeforeAll
@@ -50,9 +50,9 @@ public class WallStreetDbInitializerTest {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'broker';");
+                                                         " WHERE TABLE_NAME = 'broker';");
 
-            List<String> columns = fetchColumnValues(resultSet, "column_name");
+            List<String> columns = fetchColumnValues(resultSet, "COLUMN_NAME");
 
             assertThat(columns.size()).isEqualTo(4);
             assertThat(columns).containsExactlyInAnyOrder("id", "username", "first_name", "last_name");
@@ -66,10 +66,10 @@ public class WallStreetDbInitializerTest {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'broker' AND column_name = 'id';");
+                                                         " WHERE TABLE_NAME = 'broker' AND COLUMN_NAME = 'id';");
 
             resultSet.next();
-            String idTypeName = resultSet.getString("type_name");
+            String idTypeName = resultSet.getString("DATA_TYPE");
 
             assertThat(idTypeName).isEqualTo("BIGINT");
         }
@@ -82,9 +82,9 @@ public class WallStreetDbInitializerTest {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'broker' AND nullable = false;");
+                                                         " WHERE TABLE_NAME = 'broker' AND IS_NULLABLE = 'NO';");
 
-            List<String> notNullColumns = fetchColumnValues(resultSet, "column_name");
+            List<String> notNullColumns = fetchColumnValues(resultSet, "COLUMN_NAME");
 
             assertThat(notNullColumns.size()).isEqualTo(4);
             assertThat(notNullColumns).containsExactlyInAnyOrder("id", "username", "first_name", "last_name");
@@ -97,10 +97,10 @@ public class WallStreetDbInitializerTest {
     void brokerTableStringColumnsHaveCorrectTypeAndLength() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'broker' AND type_name = 'VARCHAR' AND character_maximum_length = 255;");
+            ResultSet resultSet = statement.executeQuery("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS" +
+                                                         " WHERE TABLE_NAME = 'broker' AND DATA_TYPE = 'CHARACTER VARYING' AND CHARACTER_MAXIMUM_LENGTH = 255;");
 
-            List<String> stringColumns = fetchColumnValues(resultSet, "column_name");
+            List<String> stringColumns = fetchColumnValues(resultSet, "COLUMN_NAME");
 
             assertThat(stringColumns.size()).isEqualTo(3);
             assertThat(stringColumns).containsExactlyInAnyOrder("username", "first_name", "last_name");
@@ -113,8 +113,8 @@ public class WallStreetDbInitializerTest {
     void brokerTableHasPrimaryKey() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'broker' AND constraint_type = 'PRIMARY_KEY';");
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS" +
+                                                         " WHERE TABLE_NAME = 'broker' AND CONSTRAINT_TYPE = 'PRIMARY KEY';");
 
             boolean resultIsNotEmpty = resultSet.next();
 
@@ -128,11 +128,11 @@ public class WallStreetDbInitializerTest {
     void brokerTablePrimaryKeyHasCorrectName() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'broker' AND constraint_type = 'PRIMARY_KEY';");
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS" +
+                                                         " WHERE TABLE_NAME = 'broker' AND CONSTRAINT_TYPE = 'PRIMARY KEY';");
 
             resultSet.next();
-            String pkConstraintName = resultSet.getString("constraint_name");
+            String pkConstraintName = resultSet.getString("CONSTRAINT_NAME");
 
             assertThat(pkConstraintName).isEqualTo("PK_broker");
         }
@@ -144,11 +144,15 @@ public class WallStreetDbInitializerTest {
     void brokerTablePrimaryKeyBasedOnIdField() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'broker' AND constraint_type = 'PRIMARY_KEY';");
+            ResultSet resultSet = statement.executeQuery("""
+                    SELECT ccu.COLUMN_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc 
+                    INNER JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu 
+                    ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME 
+                    WHERE tc.TABLE_NAME = 'broker' AND tc.CONSTRAINT_TYPE = 'PRIMARY KEY';
+                    """);
 
             resultSet.next();
-            String pkColumn = resultSet.getString("column_list");
+            String pkColumn = resultSet.getString(1);
 
             assertThat("id").isEqualTo(pkColumn);
         }
@@ -160,12 +164,16 @@ public class WallStreetDbInitializerTest {
     void brokerTableHasCorrectUniqueConstraint() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'broker' AND constraint_type = 'UNIQUE';");
+            ResultSet resultSet = statement.executeQuery("""
+                    SELECT tc.CONSTRAINT_NAME, ccu.COLUMN_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc 
+                    INNER JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu 
+                    ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME 
+                    WHERE tc.TABLE_NAME = 'broker' AND tc.CONSTRAINT_TYPE = 'UNIQUE';
+                    """);
 
             resultSet.next();
-            String uniqueConstraintName = resultSet.getString("constraint_name");
-            String uniqueConstraintColumn = resultSet.getString("column_list");
+            String uniqueConstraintName = resultSet.getString(1);
+            String uniqueConstraintColumn = resultSet.getString(2);
 
             assertThat(uniqueConstraintName).isEqualTo("UQ_broker_username");
             assertThat(uniqueConstraintColumn).isEqualTo("username");
@@ -195,9 +203,9 @@ public class WallStreetDbInitializerTest {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'sales_group';");
+                                                         " WHERE TABLE_NAME = 'sales_group';");
 
-            List<String> columns = fetchColumnValues(resultSet, "column_name");
+            List<String> columns = fetchColumnValues(resultSet, "COLUMN_NAME");
 
             assertThat(columns.size()).isEqualTo(4);
             assertThat(columns).containsExactlyInAnyOrder("id", "name", "transaction_type", "max_transaction_amount");
@@ -211,10 +219,10 @@ public class WallStreetDbInitializerTest {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'sales_group' AND column_name = 'id';");
+                                                         " WHERE TABLE_NAME = 'sales_group' AND COLUMN_NAME = 'id';");
 
             resultSet.next();
-            String idTypeName = resultSet.getString("type_name");
+            String idTypeName = resultSet.getString("DATA_TYPE");
 
             assertThat(idTypeName).isEqualTo("BIGINT");
         }
@@ -227,7 +235,7 @@ public class WallStreetDbInitializerTest {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'sales_group' AND nullable = false;");
+                                                         " WHERE TABLE_NAME = 'sales_group' AND IS_NULLABLE = 'NO';");
 
             List<String> notNullColumns = fetchColumnValues(resultSet, "column_name");
 
@@ -242,8 +250,9 @@ public class WallStreetDbInitializerTest {
     void saleGroupTableStringColumnsHaveCorrectTypeAndLength() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'sales_group' AND type_name = 'VARCHAR' AND character_maximum_length = 255;");
+            ResultSet resultSet = statement.executeQuery("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS" +
+                                                         " WHERE TABLE_NAME = 'sales_group' AND DATA_TYPE = 'CHARACTER VARYING' " +
+                                                         "AND CHARACTER_MAXIMUM_LENGTH = 255;");
 
             List<String> stringColumns = fetchColumnValues(resultSet, "column_name");
 
@@ -258,8 +267,8 @@ public class WallStreetDbInitializerTest {
     void saleGroupTablesHasPrimaryKey() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'sales_group' AND constraint_type = 'PRIMARY_KEY';");
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS" +
+                                                         " WHERE TABLE_NAME = 'sales_group' AND CONSTRAINT_TYPE = 'PRIMARY KEY';");
 
             boolean resultIsNotEmpty = resultSet.next();
 
@@ -273,11 +282,11 @@ public class WallStreetDbInitializerTest {
     void saleGroupTablePrimaryKeyHasCorrectName() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'sales_group' AND constraint_type = 'PRIMARY_KEY';");
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS" +
+                                                         " WHERE TABLE_NAME = 'sales_group' AND CONSTRAINT_TYPE = 'PRIMARY KEY';");
 
             resultSet.next();
-            String pkConstraintName = resultSet.getString("constraint_name");
+            String pkConstraintName = resultSet.getString("CONSTRAINT_NAME");
 
             assertThat(pkConstraintName).isEqualTo("PK_sales_group");
         }
@@ -289,11 +298,15 @@ public class WallStreetDbInitializerTest {
     void saleGroupTablePrimaryKeyBasedOnIdField() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'sales_group' AND constraint_type = 'PRIMARY_KEY';");
+            ResultSet resultSet = statement.executeQuery("""
+                    SELECT ccu.COLUMN_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc 
+                    INNER JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu 
+                    ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME 
+                    WHERE tc.TABLE_NAME = 'sales_group' AND tc.CONSTRAINT_TYPE = 'PRIMARY KEY';
+                    """);
 
             resultSet.next();
-            String pkColumn = resultSet.getString("column_list");
+            String pkColumn = resultSet.getString(1);
 
             assertThat("id").isEqualTo(pkColumn);
         }
@@ -305,12 +318,16 @@ public class WallStreetDbInitializerTest {
     void saleGroupTableHasCorrectUniqueConstraint() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'sales_group' AND constraint_type = 'UNIQUE';");
+            ResultSet resultSet = statement.executeQuery("""
+                    SELECT tc.CONSTRAINT_NAME, ccu.COLUMN_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc 
+                    INNER JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu 
+                    ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME 
+                    WHERE tc.TABLE_NAME = 'sales_group' AND tc.CONSTRAINT_TYPE = 'UNIQUE';
+                    """);
 
             resultSet.next();
-            String uniqueConstraintName = resultSet.getString("constraint_name");
-            String uniqueConstraintColumn = resultSet.getString("column_list");
+            String uniqueConstraintName = resultSet.getString(1);
+            String uniqueConstraintColumn = resultSet.getString(2);
 
             assertThat(uniqueConstraintName).isEqualTo("UQ_sales_group_name");
             assertThat(uniqueConstraintColumn).isEqualTo("name");
@@ -339,9 +356,9 @@ public class WallStreetDbInitializerTest {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'broker_sales_group';");
+                                                         " WHERE TABLE_NAME = 'broker_sales_group';");
 
-            List<String> notNullColumns = fetchColumnValues(resultSet, "column_name");
+            List<String> notNullColumns = fetchColumnValues(resultSet, "COLUMN_NAME");
 
             assertThat(notNullColumns.size()).isEqualTo(2);
             assertThat(notNullColumns).containsExactlyInAnyOrder("broker_id", "sales_group_id");
@@ -355,9 +372,9 @@ public class WallStreetDbInitializerTest {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'broker_sales_group' AND nullable = false;");
+                                                         " WHERE TABLE_NAME = 'broker_sales_group' AND IS_NULLABLE = 'NO';");
 
-            List<String> notNullColumns = fetchColumnValues(resultSet, "column_name");
+            List<String> notNullColumns = fetchColumnValues(resultSet, "COLUMN_NAME");
 
             assertThat(notNullColumns.size()).isEqualTo(2);
             assertThat(notNullColumns).containsExactlyInAnyOrder("broker_id", "sales_group_id");
@@ -371,9 +388,9 @@ public class WallStreetDbInitializerTest {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'broker_sales_group';");
+                                                         " WHERE TABLE_NAME = 'broker_sales_group';");
 
-            List<String> columnTypes = fetchColumnValues(resultSet, "type_name");
+            List<String> columnTypes = fetchColumnValues(resultSet, "DATA_TYPE");
 
             assertThat(columnTypes).containsExactlyInAnyOrder("BIGINT", "BIGINT");
         }
@@ -385,15 +402,22 @@ public class WallStreetDbInitializerTest {
     void brokerSaleGroupTableHasCompositePrimaryKey() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'broker_sales_group' AND constraint_type = 'PRIMARY_KEY';");
+            ResultSet resultSet = statement.executeQuery("""
+                    SELECT tc.CONSTRAINT_NAME, ccu.COLUMN_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc 
+                    INNER JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu 
+                    ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME 
+                    WHERE tc.TABLE_NAME = 'broker_sales_group' AND tc.CONSTRAINT_TYPE = 'PRIMARY KEY';
+                    """);
 
             resultSet.next();
-            String uniqueConstraintName = resultSet.getString("constraint_name");
-            String uniqueConstraintColumn = resultSet.getString("column_list");
+            String uniqueConstraintName = resultSet.getString(1);
+            String firstPrimaryKeyColumn = resultSet.getString(2);
+            resultSet.next();
+            String secondPrimaryKeyColumn = resultSet.getString(2);
 
             assertThat(uniqueConstraintName).isEqualTo("PK_broker_sales_group");
-            assertThat(uniqueConstraintColumn).isEqualTo("broker_id,sales_group_id");
+            assertThat(firstPrimaryKeyColumn).isEqualTo("sales_group_id");
+            assertThat(secondPrimaryKeyColumn).isEqualTo("broker_id");
         }
     }
 
@@ -403,8 +427,12 @@ public class WallStreetDbInitializerTest {
     void brokerSaleGroupTablesHasForeignKeyToBroker() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'broker_sales_group' AND constraint_type = 'REFERENTIAL' AND column_list = 'broker_id';");
+            ResultSet resultSet = statement.executeQuery("""
+                    SELECT * FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc 
+                    INNER JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu 
+                    ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME 
+                    WHERE tc.TABLE_NAME = 'broker_sales_group' AND tc.CONSTRAINT_TYPE = 'FOREIGN KEY' AND ccu.COLUMN_NAME = 'broker_id';
+                    """);
 
             boolean resultIsNotEmpty = resultSet.next();
 
@@ -418,11 +446,15 @@ public class WallStreetDbInitializerTest {
     void brokerSaleGroupTableForeignKeyToBrokerHasCorrectName() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'broker_sales_group' AND constraint_type = 'REFERENTIAL' AND column_list = 'broker_id';");
+            ResultSet resultSet = statement.executeQuery("""
+                    SELECT tc.CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc 
+                    INNER JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu 
+                    ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME 
+                    WHERE tc.TABLE_NAME = 'broker_sales_group' AND tc.CONSTRAINT_TYPE = 'FOREIGN KEY' AND ccu.COLUMN_NAME = 'broker_id';
+                    """);
 
             resultSet.next();
-            String fkConstraintName = resultSet.getString("constraint_name");
+            String fkConstraintName = resultSet.getString(1);
 
             assertThat(fkConstraintName, equalTo("FK_broker_sales_group_broker"));
         }
@@ -434,8 +466,12 @@ public class WallStreetDbInitializerTest {
     void brokerSaleGroupTablesHasForeignKeyToSalesGroup() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'broker_sales_group' AND constraint_type = 'REFERENTIAL' AND column_list = 'sales_group_id';");
+            ResultSet resultSet = statement.executeQuery("""
+                    SELECT * FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc 
+                    INNER JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu 
+                    ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME 
+                    WHERE tc.TABLE_NAME = 'broker_sales_group' AND tc.CONSTRAINT_TYPE = 'FOREIGN KEY' AND ccu.COLUMN_NAME = 'sales_group_id';
+                    """);
 
             boolean resultIsNotEmpty = resultSet.next();
 
@@ -449,11 +485,15 @@ public class WallStreetDbInitializerTest {
     void brokerSaleGroupTableForeignKeyToSalesGroupHasCorrectName() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'broker_sales_group' AND constraint_type = 'REFERENTIAL' AND column_list = 'sales_group_id';");
+            ResultSet resultSet = statement.executeQuery("""
+                    SELECT tc.CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc 
+                    INNER JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu 
+                    ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME 
+                    WHERE tc.TABLE_NAME = 'broker_sales_group' AND tc.CONSTRAINT_TYPE = 'FOREIGN KEY' AND ccu.COLUMN_NAME = 'sales_group_id';
+                    """);
 
             resultSet.next();
-            String fkConstraintName = resultSet.getString("constraint_name");
+            String fkConstraintName = resultSet.getString(1);
 
             assertThat(fkConstraintName).isEqualTo("FK_broker_sales_group_sales_group");
         }

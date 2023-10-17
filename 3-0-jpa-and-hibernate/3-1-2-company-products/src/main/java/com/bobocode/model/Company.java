@@ -1,9 +1,7 @@
 package com.bobocode.model;
 
 import com.bobocode.util.ExerciseNotCompletedException;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;

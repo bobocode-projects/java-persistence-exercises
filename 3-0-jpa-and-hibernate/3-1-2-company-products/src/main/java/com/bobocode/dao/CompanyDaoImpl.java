@@ -3,7 +3,7 @@ package com.bobocode.dao;
 import com.bobocode.model.Company;
 import com.bobocode.util.ExerciseNotCompletedException;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 public class CompanyDaoImpl implements CompanyDao {
     private EntityManagerFactory entityManagerFactory;

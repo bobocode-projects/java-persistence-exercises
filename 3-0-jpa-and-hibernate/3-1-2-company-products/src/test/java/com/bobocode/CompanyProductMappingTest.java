@@ -9,10 +9,10 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.LazyInitializationException;
 import org.junit.jupiter.api.*;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.JoinColumn;
-import javax.persistence.Persistence;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Persistence;
+import jakarta.persistence.PersistenceException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.List;
