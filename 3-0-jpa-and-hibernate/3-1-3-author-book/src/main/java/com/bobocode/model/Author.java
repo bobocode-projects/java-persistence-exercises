@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.CascadeType;
+import jakarta.persistence.CascadeType;
 import java.util.HashSet;
 import java.util.Set;
 

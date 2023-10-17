@@ -3,7 +3,7 @@ package com.bobocode.dao;
 import com.bobocode.model.Photo;
 import com.bobocode.util.ExerciseNotCompletedException;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 import java.util.List;
 
 /**

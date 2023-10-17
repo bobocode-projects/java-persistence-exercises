@@ -3,7 +3,7 @@ package com.bobocode.dao;
 import com.bobocode.model.Account;
 import com.bobocode.util.ExerciseNotCompletedException;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 import java.util.List;
 
 public class AccountDaoImpl implements AccountDao {

@@ -6,8 +6,8 @@ import com.bobocode.util.EntityManagerUtil;
 import com.bobocode.util.TestDataGenerator;
 import org.junit.jupiter.api.*;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
