@@ -3,7 +3,7 @@ package com.bobocode.model;
 import com.bobocode.util.ExerciseNotCompletedException;
 import lombok.*;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 

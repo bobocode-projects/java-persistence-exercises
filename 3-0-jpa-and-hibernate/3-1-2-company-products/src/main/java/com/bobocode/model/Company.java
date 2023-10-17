@@ -1,9 +1,8 @@
 package com.bobocode.model;
 
-import com.bobocode.util.ExerciseNotCompletedException;
+import jakarta.persistence.*;
 import lombok.*;
 
-import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
