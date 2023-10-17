@@ -5,8 +5,8 @@ import com.bobocode.model.Company;
 import com.bobocode.util.ExerciseNotCompletedException;
 import org.hibernate.Session;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import java.util.function.Function;
 
 public class CompanyDaoImpl implements CompanyDao {

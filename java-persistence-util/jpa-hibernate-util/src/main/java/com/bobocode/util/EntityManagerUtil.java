@@ -1,7 +1,7 @@
 package com.bobocode.util;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import java.util.function.Consumer;
 import java.util.function.Function;
 

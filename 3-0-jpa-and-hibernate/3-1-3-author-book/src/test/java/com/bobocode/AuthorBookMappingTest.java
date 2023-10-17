@@ -7,7 +7,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.Session;
 import org.junit.jupiter.api.*;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.List;

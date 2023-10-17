@@ -5,7 +5,7 @@ import com.bobocode.model.PhotoComment;
 import com.bobocode.util.EntityManagerUtil;
 import com.bobocode.util.ExerciseNotCompletedException;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 import java.util.List;
 import java.util.Objects;
 

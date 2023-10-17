@@ -20,7 +20,7 @@ import java.util.List;
  * - initialize field comments
  * - map relation between Photo and PhotoComment on the child side
  * - implement helper methods {@link Photo#addComment(PhotoComment)} and {@link Photo#removeComment(PhotoComment)}
- * - enable cascade type {@link javax.persistence.CascadeType#ALL} for field {@link Photo#comments}
+ * - enable cascade type {@link jakarta.persistence.CascadeType#ALL} for field {@link Photo#comments}
  * - enable orphan removal
  */
 @NoArgsConstructor
