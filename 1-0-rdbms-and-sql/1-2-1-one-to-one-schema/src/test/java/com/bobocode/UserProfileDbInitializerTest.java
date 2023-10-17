@@ -49,10 +49,10 @@ public class UserProfileDbInitializerTest {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'users' AND column_name = 'id';");
+                                                         " WHERE TABLE_NAME = 'users' AND COLUMN_NAME = 'id';");
 
             resultSet.next();
-            String idTypeName = resultSet.getString("type_name");
+            String idTypeName = resultSet.getString("DATA_TYPE");
 
             assertThat(idTypeName).isEqualTo("BIGINT");
         }
@@ -65,9 +65,9 @@ public class UserProfileDbInitializerTest {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'users';");
+                                                         " WHERE TABLE_NAME = 'users';");
 
-            List<String> columns = fetchColumnValues(resultSet, "column_name");
+            List<String> columns = fetchColumnValues(resultSet, "COLUMN_NAME");
 
             assertThat(columns.size()).isEqualTo(5);
             assertThat(columns).containsExactlyInAnyOrder("id", "email", "first_name", "last_name", "birthday");
@@ -80,10 +80,10 @@ public class UserProfileDbInitializerTest {
     void testUsersTableStringColumnsHaveCorrectTypeAndLength() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'users' AND type_name = 'VARCHAR' AND character_maximum_length = 255;");
+            ResultSet resultSet = statement.executeQuery("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS" +
+                                                         " WHERE TABLE_NAME = 'users' AND DATA_TYPE = 'CHARACTER VARYING' AND CHARACTER_MAXIMUM_LENGTH = 255;");
 
-            List<String> stringColumns = fetchColumnValues(resultSet, "column_name");
+            List<String> stringColumns = fetchColumnValues(resultSet, "COLUMN_NAME");
 
             assertThat(stringColumns.size()).isEqualTo(3);
             assertThat(stringColumns).containsExactlyInAnyOrder("email", "first_name", "last_name");
@@ -97,10 +97,10 @@ public class UserProfileDbInitializerTest {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'users' AND column_name = 'birthday';");
+                                                         " WHERE TABLE_NAME = 'users' AND COLUMN_NAME = 'birthday';");
 
             resultSet.next();
-            String idTypeName = resultSet.getString("type_name");
+            String idTypeName = resultSet.getString("DATA_TYPE");
 
             assertThat(idTypeName).isEqualTo("DATE");
         }
@@ -113,9 +113,9 @@ public class UserProfileDbInitializerTest {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'users' AND nullable = false;");
+                                                         " WHERE TABLE_NAME = 'users' AND IS_NULLABLE = 'NO';");
 
-            List<String> notNullColumns = fetchColumnValues(resultSet, "column_name");
+            List<String> notNullColumns = fetchColumnValues(resultSet, "COLUMN_NAME");
 
             assertThat(notNullColumns).contains("email", "first_name", "last_name", "birthday");
         }
@@ -127,8 +127,8 @@ public class UserProfileDbInitializerTest {
     void usersTableHasPrimaryKey() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'users' AND constraint_type = 'PRIMARY_KEY';");
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS" +
+                                                         " WHERE TABLE_NAME = 'users' AND CONSTRAINT_TYPE = 'PRIMARY KEY';");
 
             boolean resultIsNotEmpty = resultSet.next();
 
@@ -143,11 +143,11 @@ public class UserProfileDbInitializerTest {
     void usersTablePrimaryKeyHasCorrectName() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'users' AND constraint_type = 'PRIMARY_KEY';");
+            ResultSet resultSet = statement.executeQuery("SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS" +
+                                                         " WHERE TABLE_NAME = 'users' AND CONSTRAINT_TYPE = 'PRIMARY KEY';");
 
             resultSet.next();
-            String pkConstraintName = resultSet.getString("constraint_name");
+            String pkConstraintName = resultSet.getString(1);
 
             assertThat(pkConstraintName).isEqualTo("users_PK");
         }
@@ -159,11 +159,15 @@ public class UserProfileDbInitializerTest {
     void usersTablePrimaryKeyBasedOnIdField() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'users' AND constraint_type = 'PRIMARY_KEY';");
+            ResultSet resultSet = statement.executeQuery("""
+                    SELECT ccu.COLUMN_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc 
+                    INNER JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu 
+                    ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME 
+                    WHERE tc.TABLE_NAME = 'users' AND tc.CONSTRAINT_TYPE = 'PRIMARY KEY';
+                    """);
 
             resultSet.next();
-            String pkColumn = resultSet.getString("column_list");
+            String pkColumn = resultSet.getString(1);
 
             assertThat("id").isEqualTo(pkColumn);
         }
@@ -175,12 +179,16 @@ public class UserProfileDbInitializerTest {
     void testUsersTableHasCorrectAlternativeKey() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'users' AND constraint_type = 'UNIQUE';");
+            ResultSet resultSet = statement.executeQuery("""
+                    SELECT tc.CONSTRAINT_NAME, ccu.COLUMN_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc 
+                    INNER JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu 
+                    ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME 
+                    WHERE tc.TABLE_NAME = 'users' AND tc.CONSTRAINT_TYPE = 'UNIQUE';
+                    """);
 
             resultSet.next();
-            String uniqueConstraintName = resultSet.getString("constraint_name");
-            String uniqueConstraintColumn = resultSet.getString("column_list");
+            String uniqueConstraintName = resultSet.getString(1);
+            String uniqueConstraintColumn = resultSet.getString(2);
 
             assertThat(uniqueConstraintName).isEqualTo("users_email_AK");
             assertThat(uniqueConstraintColumn).isEqualTo("email");
@@ -208,10 +216,10 @@ public class UserProfileDbInitializerTest {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'profiles' AND column_name = 'user_id';");
+                                                         " WHERE TABLE_NAME = 'profiles' AND COLUMN_NAME = 'user_id';");
 
             resultSet.next();
-            String idTypeName = resultSet.getString("type_name");
+            String idTypeName = resultSet.getString("DATA_TYPE");
 
             assertThat(idTypeName).isEqualTo("BIGINT");
         }
@@ -224,9 +232,9 @@ public class UserProfileDbInitializerTest {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'profiles';");
+                                                         " WHERE TABLE_NAME = 'profiles';");
 
-            List<String> columns = fetchColumnValues(resultSet, "column_name");
+            List<String> columns = fetchColumnValues(resultSet, "COLUMN_NAME");
 
             assertThat(columns.size()).isEqualTo(5);
             assertThat(columns).containsExactlyInAnyOrder("user_id", "job_position", "company", "education", "city");
@@ -239,10 +247,10 @@ public class UserProfileDbInitializerTest {
     void profilesTableStringColumnsHaveCorrectTypeAndLength() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS" +
-                    " WHERE table_name = 'profiles' AND type_name = 'VARCHAR' AND character_maximum_length = 255;");
+            ResultSet resultSet = statement.executeQuery("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS" +
+                                                         " WHERE TABLE_NAME = 'profiles' AND DATA_TYPE = 'CHARACTER VARYING' AND CHARACTER_MAXIMUM_LENGTH = 255;");
 
-            List<String> stringColumns = fetchColumnValues(resultSet, "column_name");
+            List<String> stringColumns = fetchColumnValues(resultSet, "COLUMN_NAME");
 
             assertThat(stringColumns.size()).isEqualTo(4);
             assertThat(stringColumns).containsExactlyInAnyOrder("job_position", "company", "education", "city");
@@ -255,8 +263,8 @@ public class UserProfileDbInitializerTest {
     void profilesTablesHasPrimaryKey() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'profiles' AND constraint_type = 'PRIMARY_KEY';");
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS" +
+                                                         " WHERE TABLE_NAME = 'profiles' AND CONSTRAINT_TYPE = 'PRIMARY KEY';");
 
             boolean resultIsNotEmpty = resultSet.next();
 
@@ -270,11 +278,11 @@ public class UserProfileDbInitializerTest {
     void profilesTablePrimaryKeyHasCorrectName() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'profiles' AND constraint_type = 'PRIMARY_KEY';");
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS" +
+                                                         " WHERE TABLE_NAME = 'profiles' AND CONSTRAINT_TYPE = 'PRIMARY KEY';");
 
             resultSet.next();
-            String pkConstraintName = resultSet.getString("constraint_name");
+            String pkConstraintName = resultSet.getString("CONSTRAINT_NAME");
 
             assertThat(pkConstraintName).isEqualTo("profiles_PK");
         }
@@ -286,11 +294,15 @@ public class UserProfileDbInitializerTest {
     void profilesTablePrimaryKeyBasedOnForeignKeyColumn() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'profiles' AND constraint_type = 'PRIMARY_KEY';");
+            ResultSet resultSet = statement.executeQuery("""
+                    SELECT ccu.COLUMN_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc 
+                    INNER JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu 
+                    ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME 
+                    WHERE tc.TABLE_NAME = 'profiles' AND tc.CONSTRAINT_TYPE = 'PRIMARY KEY';
+                    """);
 
             resultSet.next();
-            String pkColumn = resultSet.getString("column_list");
+            String pkColumn = resultSet.getString(1);
 
             assertThat("user_id", equalTo(pkColumn));
         }
@@ -302,8 +314,12 @@ public class UserProfileDbInitializerTest {
     void testProfilesHasForeignKeyToUsers() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'profiles' AND constraint_type = 'REFERENTIAL' AND column_list = 'user_id';");
+            ResultSet resultSet = statement.executeQuery("""
+                    SELECT * FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc 
+                    INNER JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu 
+                    ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME 
+                    WHERE tc.TABLE_NAME = 'profiles' AND tc.CONSTRAINT_TYPE = 'FOREIGN KEY' AND ccu.COLUMN_NAME = 'user_id';
+                    """);
 
             boolean resultIsNotEmpty = resultSet.next();
 
@@ -317,11 +333,15 @@ public class UserProfileDbInitializerTest {
     void profilesForeignKeyToUsersHasCorrectName() throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.CONSTRAINTS" +
-                    " WHERE table_name = 'profiles' AND constraint_type = 'REFERENTIAL' AND column_list = 'user_id';");
+            ResultSet resultSet = statement.executeQuery("""
+                    SELECT tc.CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc 
+                    INNER JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE ccu 
+                    ON tc.CONSTRAINT_NAME = ccu.CONSTRAINT_NAME 
+                    WHERE tc.TABLE_NAME = 'profiles' AND tc.CONSTRAINT_TYPE = 'FOREIGN KEY' AND ccu.COLUMN_NAME = 'user_id';
+                    """);
 
             resultSet.next();
-            String fkConstraintName = resultSet.getString("constraint_name");
+            String fkConstraintName = resultSet.getString(1);
 
             assertThat(fkConstraintName).isEqualTo("profiles_users_FK");
         }
