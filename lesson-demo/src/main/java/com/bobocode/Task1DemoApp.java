@@ -22,7 +22,7 @@ public class Task1DemoApp {
 
     private static DataSource initDb() {
         var dataSource = new PGSimpleDataSource();
-        dataSource.setURL("jdbc:postgresql://localhost:5432/postgres");
+        dataSource.setURL("jdbc:postgresql://93.175.203.215:5432/postgres");
         dataSource.setUser("ju23user");
         dataSource.setPassword("ju23pass");
         return dataSource;
