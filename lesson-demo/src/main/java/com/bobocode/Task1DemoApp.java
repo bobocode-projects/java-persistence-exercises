@@ -12,7 +12,17 @@ public class Task1DemoApp {
         try (var connection = dataSource.getConnection()) {
             try (var insertStatement = connection.prepareStatement("insert into notes(title, body, person_id) values(?,?,?);")) {
                 var start = System.nanoTime();
-                // todo: insert 1000 notes
+                for (int i = 0; i < 10_000; i++) {
+                    insertStatement.setString(1, "Task 1 note-"+i);
+                    insertStatement.setString(2, "Taras Boychuk note-"+i);
+                    insertStatement.setInt(3, 46);
+                    insertStatement.addBatch();
+                    if (i % 100 == 0) {
+                        insertStatement.executeBatch();
+                    }
+//                    insertStatement.executeUpdate();
+                }
+                insertStatement.executeBatch();
                 var end = System.nanoTime();
                 System.out.println((end - start) / 1000_000 + "ms");
             }
