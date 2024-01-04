@@ -32,7 +32,7 @@ public class Task2DemoApp {
                 em.persist(newNote);
             }
         });
-        System.out.println((System.nanoTime() - start) + "ms");
+        System.out.println(((System.nanoTime() - start) / 1000_000) + "ms");
 
         emf.close();
     }
