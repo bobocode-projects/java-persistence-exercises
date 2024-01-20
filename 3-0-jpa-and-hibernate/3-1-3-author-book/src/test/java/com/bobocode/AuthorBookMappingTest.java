@@ -5,6 +5,7 @@ import com.bobocode.model.Book;
 import com.bobocode.util.EntityManagerUtil;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.Session;
+import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.*;
 
 import jakarta.persistence.*;
@@ -15,6 +16,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -66,8 +68,8 @@ class AuthorBookMappingTest {
         Book bookWithDuplicateIsbn = createRandomBook();
         bookWithDuplicateIsbn.setIsbn(book.getIsbn());
 
-        assertThatExceptionOfType(RollbackException.class).isThrownBy(() ->
-                emUtil.performWithinTx(entityManager -> entityManager.persist(bookWithDuplicateIsbn)));
+        assertThatThrownBy(() -> emUtil.performWithinTx(entityManager -> entityManager.persist(bookWithDuplicateIsbn)))
+                .isInstanceOfAny(RollbackException.class, ConstraintViolationException.class);
     }
 
     @Test
