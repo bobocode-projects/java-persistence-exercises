@@ -234,7 +234,7 @@ class PhotoCommentMappingTest {
 
     @Test
     @Order(16)
-    @DisplayName("Add a new comment")
+    @DisplayName("Add new comments")
     void addNewComments() {
         Photo photo = createRandomPhoto();
         emUtil.performWithinTx(entityManager -> entityManager.persist(photo));
